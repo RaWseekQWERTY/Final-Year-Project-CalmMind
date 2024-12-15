@@ -15,7 +15,22 @@ class User(AbstractUser):
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='male')
-    avatar = models.ImageField(max_length=100, blank=True, null=True,upload_to='/images/user')
+    avatar = models.ImageField(max_length=100, blank=True, null=True,upload_to='images/user')
+
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='custom_user_groups',  # Avoids conflict
+        blank=True,
+        help_text="The groups this user belongs to.",
+        verbose_name="groups"
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='custom_user_permissions',  # Avoids conflict
+        blank=True,
+        help_text="Specific permissions for this user.",
+        verbose_name="user permissions"
+    )
 
     def is_patient(self):
         return self.role == 'patient'
