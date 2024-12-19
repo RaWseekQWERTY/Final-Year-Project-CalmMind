@@ -1,14 +1,12 @@
-# Import necessary modules
-from django.contrib import admin  # Django admin module
-from django.urls import path       # URL routing
-from auth_app.views import *  # Import views from the authentication app
-from django.conf import settings   # Application settings
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns  # Static files serving
+from django.urls import path
+from . import views
 
-# Define URL patterns
-app_name = "auth_app"
 urlpatterns = [
-    path('', home, name="home_page"),      # Home page
-    path('login/', login_page, name='login_page'),    # Login page
-    path('register/', register_page, name='register'),  # Registration page
+    path('', views.home_view, name='home'),
+    path('register/', views.register_view, name='register'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('patient/', views.patient_dashboard, name='patient_dashboard'),
+    path('doctor/', views.doctor_dashboard, name='doctor_dashboard'),
+    path('admin_dash/', views.admin_dashboard, name='admin_dashboard'),
 ]

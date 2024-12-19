@@ -79,6 +79,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'calmmind.wsgi.application'
 
+AUTH_USER_MODEL = 'auth_app.User'
+
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

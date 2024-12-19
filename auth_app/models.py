@@ -61,7 +61,7 @@ class Doctor(models.Model):
     specialization = models.CharField(max_length=100)
     license_number = models.CharField(max_length=50, unique=True)
     contact_number = models.CharField(max_length=15, null=True, blank=True)
-    visiting_hour = models.CharField(max_length=200, null=True, blank=True)
+    visiting_hour = models.TimeField(max_length=200, null=True, blank=True)
     consultation_fee = models.IntegerField(null=True, blank=True)
     featured_image = models.ImageField(upload_to='images/doctor', default='patients/user-default.png', null=True, blank=True)
 
