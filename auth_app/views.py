@@ -1,8 +1,8 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
-from .models import User
+from .models import User,Patient,Doctor
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 
@@ -38,6 +38,7 @@ def register_view(request):
             user.is_staff = True
         user.set_password(password)  # Hash the password
         user.save()
+        Patient.objects.create(user=user)
 
         messages.success(request, "Registration successful. Please log in.")
         return redirect("login")
@@ -73,19 +74,6 @@ def login_view(request):
 
     return render(request, "auth_app/login.html")
 
-from django.http import JsonResponse
-from django.contrib.auth import authenticate
-
-# def test_auth_view(request):
-#     username = "re"
-#     password = "your_password"
-#     user = authenticate(request, username=username, password=password)
-#     return JsonResponse({
-#         "user_authenticated": user is not None,
-#         "is_active": user.is_active if user else None,
-#     })
-
-
 @login_required
 def patient_dashboard(request):
     if request.user.is_patient():
@@ -98,11 +86,43 @@ def doctor_dashboard(request):
         return render(request, "auth_app/doctor.html")
     return HttpResponseForbidden("You are not authorized to view this page.")
 
+
 @login_required
 def admin_dashboard(request):
-    if request.user.is_admin():
-        return render(request, "auth_app/admin_dash.html")
-    return HttpResponseForbidden("You are not authorized to view this page.")
+    if not request.user.is_admin():
+        return HttpResponseForbidden("You are not authorized to view this page.")
+    users = User.objects.all()
+    return render(request, "auth_app/admin_dash.html", {"users": users})
+
+
+@login_required
+def update_user_role_page(request, user_id):
+    if not request.user.is_admin():
+        return HttpResponseForbidden("You are not authorized to update user roles.")
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        new_role = request.POST.get('role')
+        if new_role in [role[0] for role in User.ROLE_CHOICES]:
+            user.role = new_role
+            if new_role == 'patient':
+                if hasattr(user, 'doctor_profile'):
+                  user.doctor_profile.delete()
+                Patient.objects.get_or_create(user=user)
+            elif new_role == 'doctor':
+               if hasattr(user, 'patient_profile'):
+                  user.patient_profile.delete()
+                  Doctor.objects.get_or_create(user=user)
+            else:
+                  if hasattr(user, 'doctor_profile'):
+                      user.doctor_profile.delete()
+                  if hasattr(user, 'patient_profile'):
+                      user.patient_profile.delete()
+            user.save()
+            messages.success(request, f"User '{user.username}' role updated to {new_role}.")
+            return redirect('admin_dashboard')
+        else:
+            messages.error(request, 'Invalid role selected.')
+    return render(request, "auth_app/update_role_page.html", {'user': user})
 
 def logout_view(request):
     logout(request)
