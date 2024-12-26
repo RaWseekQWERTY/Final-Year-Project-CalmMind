@@ -1,13 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User,AbstractUser, BaseUserManager,PermissionsMixin
 
-# Extend Django's default User model
-class User(AbstractUser):
-    ROLE_CHOICES = (
+from django.contrib.auth import get_user_model
+
+ROLE_CHOICES = (
         ('admin', 'Admin'),
         ('doctor', 'Doctor'),
         ('patient', 'Patient'),
     )
+# Extend Django's default User model
+class User(AbstractUser):
+
     GENDER_CHOICES = (
         ('male', 'Male'),
         ('female', 'Female'),

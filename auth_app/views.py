@@ -5,7 +5,9 @@ from django.http import HttpResponseForbidden
 from .models import User,Patient,Doctor
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 def home_view(request):
     return render(request, 'auth_app/home.html')
