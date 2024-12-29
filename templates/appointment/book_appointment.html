@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment</title>
+</head>
+<body>
+    <h1>Book Appointment with {{ doctor.user.get_full_name }}</h1>
+
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="appointment_date">Appointment Date:</label>
+        <input type="date" name="appointment_date" required>
+        <br><br>
+
+        <label for="appointment_time">Appointment Time:</label>
+        <input type="time" name="appointment_time" required>
+        <br><br>
+
+        <label for="location">Location:</label>
+        <input type="text" name="location" placeholder="Enter location">
+        <br><br>
+
+        <label for="notes">Notes:</label>
+        <textarea name="notes" placeholder="Enter any notes"></textarea>
+        <br><br>
+
+        <button type="submit">Book Appointment</button>
+    </form>
+</body>
+</html>

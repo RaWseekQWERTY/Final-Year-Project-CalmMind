@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor List</title>
+</head>
+<body>
+    <h1>Available Doctors</h1>
+    <table border="1">
+        <tr>
+            <th>Name</th>
+            <th>Specialization</th>
+            <th>Contact</th>
+            <th>Action</th>
+        </tr>
+        {% for doctor in doctors %}
+        <tr>
+            <td>{{ doctor.user.get_full_name }}</td>
+            <td>{{ doctor.specialization }}</td>
+            <td>{{ doctor.contact_number }}</td>
+            <td>
+                <a href="{% url 'book_appointment' doctor.id %}">Book Appointment</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
