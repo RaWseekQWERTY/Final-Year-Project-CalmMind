@@ -6,7 +6,11 @@ from django.contrib.auth.decorators import login_required
 # List of all available doctors
 def doctor_list(request):
     doctors = Doctor.objects.all()
-    return render(request, 'appointment/doctor_list.html', {'doctors': doctors})
+    context = {
+        'doctors': doctors,
+        'no_doctors': not doctors.exists(), 
+    }
+    return render(request, 'appointments/doctor_list.html', context)
 
 # Appointment booking view
 
