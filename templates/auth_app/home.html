@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-</head>
-<body>
-    <h1>Welcome to the Main Site</h1>
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="p-39">Welcome to the Main Site</h1>
     <p>Please <a href="{% url 'register' %}">register</a> or <a href="{% url 'login' %}">login</a> to continue.</p>
-</body>
-</html>
-    
+{% endblock %}

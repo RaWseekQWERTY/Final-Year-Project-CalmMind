@@ -10,7 +10,7 @@ def doctor_list(request):
         'doctors': doctors,
         'no_doctors': not doctors.exists(), 
     }
-    return render(request, 'appointments/doctor_list.html', context)
+    return render(request, 'appointment/doctor_list.html', context)
 
 # Appointment booking view
 
