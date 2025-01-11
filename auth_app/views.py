@@ -20,25 +20,35 @@ def register_view(request):
         gender = "male"
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
-        role="patient"
+        role = "patient"
 
+        # Check if passwords match
         if password != confirm_password:
-            messages.error(request, "Passwords do not match")
+            messages.error(request, "Passwords do not match.")
             return render(request, "auth_app/register.html")
 
-        # Create user
+        # Check if username or email already exists
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already taken.")
+            return render(request, "auth_app/register.html")
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email is already registered.")
+            return render(request, "auth_app/register.html")
+
+        # Create the user
         user = User.objects.create(
             username=username,
             first_name=first_name,
             last_name=last_name,
-            email=email,
-            gender=gender,
-            role=role
+            email=email
         )
-        if role == 'admin':
+        if role == "admin":
             user.is_staff = True
+
         user.set_password(password)  # Hash the password
         user.save()
+
+        # Create associated Patient profile
         Patient.objects.create(user=user)
 
         messages.success(request, "Registration successful. Please log in.")

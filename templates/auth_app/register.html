@@ -1,88 +1,64 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} 
+
+{% block content %}
 <div class="flex flex-col justify-center font-[sans-serif] bg-green-50">
   <div class="max-w-md w-full mx-auto border border-gray-300 rounded-2xl p-8">
     <div class="text-center mb-12">
-      <a href="javascript:void(0)"
-        ><img
-          src=""
-          alt="logo"
-          class="w-40 inline-block"
-        />
+      <a href="javascript:void(0)">
+        <img src="" alt="logo" class="w-40 inline-block" />
       </a>
     </div>
-    <form>
+
+    <!-- Display Messages -->
+    {% if messages %}
+      <div class="mb-4">
+        {% for message in messages %}
+          <p class="text-sm p-3 rounded-md {% if message.tags == 'error' %}bg-red-100 text-red-600{% else %}bg-green-100 text-green-600{% endif %}">
+            {{ message }}
+          </p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
       <div class="grid sm:grid-cols-2 gap-8">
         <div>
           <label class="text-gray-800 text-sm mb-2 block">First Name</label>
-          <input
-            name="first_name"
-            type="text"
-            class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-            placeholder="Enter name"
-          />
+          <input name="first_name" type="text" class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all" placeholder="Enter name" />
         </div>
         <div>
           <label class="text-gray-800 text-sm mb-2 block">Last Name</label>
-          <input
-            name="last_name"
-            type="text"
-            class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-            placeholder="Enter last name"
-          />
+          <input name="last_name" type="text" class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all" placeholder="Enter last name" />
         </div>
         <div>
           <label class="text-gray-800 text-sm mb-2 block">Email Id</label>
-          <input
-            name="email"
-            id="email"
-            type="text"
-            class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-            placeholder="Enter email"
-          />
+          <input name="email" id="email" type="text" class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all" placeholder="Enter email" />
         </div>
         <div>
           <label class="text-gray-800 text-sm mb-2 block">Username</label>
-          <input
-            name="username"
-            id="username"
-            type="text"
-            class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-            placeholder="Enter mobile number"
-          />
+          <input name="username" id="username" type="text" class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all" placeholder="Enter mobile number" />
         </div>
         <div>
           <label class="text-gray-800 text-sm mb-2 block">Password</label>
-          <input
-            name="password"
-            type="password"
-            class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-            placeholder="Enter password"
-          />
+          <input name="password" type="password" class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all" placeholder="Enter password" />
         </div>
         <div>
-          <label class="text-gray-800 text-sm mb-2 block"
-            >Confirm Password</label
-          >
-          <input
-            name="confirm_password"
-            id="confirm_password"
-            type="password"
-            class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-            placeholder="Enter confirm password"
-          />
+          <label class="text-gray-800 text-sm mb-2 block">Confirm Password</label>
+          <input name="confirm_password" id="confirm_password" type="password" class="bg-gray-100 w-full text-gray-800 text-sm px-4 py-3.5 rounded-md focus:bg-transparent outline-blue-500 transition-all" placeholder="Enter confirm password" />
         </div>
       </div>
 
       <div class="!mt-12">
-        <button
-          type="button"
-          class="py-3.5 px-7 text-sm font-semibold tracking-wider rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none"
-        >
+        <button type="submit" class="py-3.5 px-7 text-sm font-semibold tracking-wider rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none">
           Sign up
         </button>
       </div>
-      <p class="text-gray-800 text-sm mt-6 text-center">Already have an account? <a href="{% url 'login' %}" class="text-green-600 font-semibold hover:underline ml-1">Login here</a></p>
 
+      <p class="text-gray-800 text-sm mt-6 text-center">
+        Already have an account? 
+        <a href="{% url 'login' %}" class="text-green-600 font-semibold hover:underline ml-1">Login here</a>
+      </p>
     </form>
   </div>
 </div>

@@ -8,5 +8,14 @@
 <body>
     <h1>Welcome {{ user.get_full_name }}</h1>
     <p>You are logged in as a doctor.</p>
+
+    <!-- Manage Availability Section -->
+    {% if user.doctor_profile %}
+        <h2>Manage Availability</h2>
+        <p>You can update your visiting hours, consultation fee, and location.</p>
+        <a href="{% url 'doctor_availability_register' user.doctor_profile.id %}">Manage Availability</a>
+    {% else %}
+        <p><strong>Note:</strong> Your doctor profile has not been created yet. Please contact the admin.</p>
+    {% endif %}
 </body>
 </html>

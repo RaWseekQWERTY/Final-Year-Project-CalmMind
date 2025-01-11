@@ -1,36 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment</title>
-</head>
-<body>
-    <h1>Book Appointment with {{ doctor.user.get_full_name }}</h1>
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto mt-10">
+    <h1 class="text-2xl font-bold mb-4">Book an Appointment with Dr. {{ doctor.user.get_full_name }}</h1>
 
     {% if error_message %}
-        <p style="color: red;">{{ error_message }}</p>
+        <div class="bg-red-100 text-red-700 border border-red-400 px-4 py-2 rounded mb-4">
+            {{ error_message }}
+        </div>
     {% endif %}
 
     <form method="post">
         {% csrf_token %}
-        <label for="appointment_date">Appointment Date:</label>
-        <input type="date" name="appointment_date" required>
-        <br><br>
+        <div class="mb-4">
+            <label for="appointment_date" class="block text-sm font-medium text-gray-700">Appointment Date</label>
+            <input type="date" id="appointment_date" name="appointment_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+        </div>
 
-        <label for="appointment_time">Appointment Time:</label>
-        <input type="time" name="appointment_time" required>
-        <br><br>
+        <div class="mb-4">
+            <label for="appointment_time" class="block text-sm font-medium text-gray-700">Appointment Time</label>
+            <input type="time" id="appointment_time" name="appointment_time" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+        </div>
 
-        <label for="location">Location:</label>
-        <input type="text" name="location" placeholder="Enter location">
-        <br><br>
+        <div class="mb-4">
+            <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+            <input type="text" id="location" name="location" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+        </div>
 
-        <label for="notes">Notes:</label>
-        <textarea name="notes" placeholder="Enter any notes"></textarea>
-        <br><br>
+        <div class="mb-4">
+            <label for="notes" class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+            <textarea id="notes" name="notes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+        </div>
 
-        <button type="submit">Book Appointment</button>
+        <button type="submit" class="bg-green-500 text-black py-2 px-4 rounded">Book Appointment</button>
     </form>
-</body>
-</html>
+</div>
+{% endblock %}

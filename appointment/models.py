@@ -23,3 +23,13 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"Appointment with {self.doctor} on {self.appointment_date} at {self.appointment_time} - {self.status}"
+    
+class DoctorAvailability(models.Model):
+    doctor = models.OneToOneField(Doctor, on_delete=models.CASCADE, related_name='information')
+    visiting_hours_start = models.TimeField(null=True, blank=True)
+    visiting_hours_end = models.TimeField(null=True, blank=True)
+    consultation_fee = models.IntegerField(null=True, blank=True)
+    location = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"Availability for Dr. {self.doctor.user.get_full_name()}"

@@ -6,8 +6,19 @@
           <path d="M12 2a10 10 0 00-10 10 10 10 0 0010 10 10 10 0 0010-10A10 10 0 0012 2zM4 12a8 8 0 1116 0A8 8 0 014 12zm8-5a5 5 0 00-5 5 5 5 0 0010 0 5 5 0 00-5-5zm0 8a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
       </svg>
   </div>
+     <!-- Display Messages -->
+     {% if messages %}
+     <div class="mb-4">
+       {% for message in messages %}
+         <p class="text-sm p-3 rounded-md {% if message.tags == 'error' %}bg-red-100 text-red-600{% else %}bg-green-100 text-green-600{% endif %}">
+           {{ message }}
+         </p>
+       {% endfor %}
+     </div>
+   {% endif %}
   <h2 class="text-2xl font-bold text-gray-800 text-center">Login</h2>
-  <form action="#" method="POST" class="space-y-4">
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
       <div>
           <label for="email" class="block text-sm font-medium text-gray-700">Username</label>
           <input type="username" id="username" name="username" required
