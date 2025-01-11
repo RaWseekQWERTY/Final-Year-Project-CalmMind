@@ -4,6 +4,7 @@ from .models import Appointment
 from django.contrib.auth.decorators import login_required
 
 # List of all available doctors
+@login_required
 def doctor_list(request):
     doctors = Doctor.objects.all()
     context = {

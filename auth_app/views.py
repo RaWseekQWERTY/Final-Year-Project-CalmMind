@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from .models import User,Patient,Doctor
 from django.contrib import messages
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -18,7 +17,7 @@ def register_view(request):
         first_name = request.POST.get("first_name")
         last_name = request.POST.get("last_name")
         email = request.POST.get("email")
-        gender = request.POST.get("gender")
+        gender = "male"
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
         role="patient"

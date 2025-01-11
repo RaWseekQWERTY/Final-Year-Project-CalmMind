@@ -1,106 +1,29 @@
 {% extends "base.html" %} {% block content %}
-<div class="bg-white-50">
-  <div class="flex min-h-[80vh] flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="text-center sm:mx-auto sm:w-full sm:max-w-md">
-      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white">
-        Sign in
-      </h1>
-    </div>
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-      <div
-        class="bg-gray-200 px-4 pb-4 pt-8 sm:rounded-lg sm:px-10 sm:pb-6 sm:shadow"
-      >
-        <form class="space-y-6" method="post">
-          {% csrf_token %}
-          <div>
-            {% if messages %}
-            <ul>
-              {% for message in messages %}
-              <li>{{ message }}</li>
-              {% endfor %}
-            </ul>
-            {% endif %}
-            <label
-              for="username"
-              class="block text-sm font-medium text-black-700"
-            >
-              Username
-            </label>
-            <div class="mt-1">
-              <input
-                id="username"
-                name="username"
-                type="text"
-                data-testid="username"
-                required=""
-                class="block w-full appearance-none rounded-md border border-white-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:bg-white-800 dark:border-gray-600 dark:text-black dark:placeholder-gray-300 dark:focus:border-indigo-400 dark:focus:ring-indigo-400 sm:text-sm"
-                value=""
-              />
-            </div>
-          </div>
-          <div>
-            <label
-              for="password"
-              class="block text-sm font-medium text-black-700"
-            >
-              Password
-            </label>
-            <div class="mt-1">
-              <input
-                id="password"
-                name="password"
-                type="password"
-                data-testid="password"
-                autocomplete="current-password"
-                required=""
-                class="block w-full appearance-none rounded-md border border-white-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:bg-white-800 dark:border-gray-600 dark:text-black dark:placeholder-gray-300 dark:focus:border-indigo-400 dark:focus:ring-indigo-400 sm:text-sm"
-                value=""
-              />
-            </div>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <input
-                id="remember_me"
-                name="remember_me"
-                type="checkbox"
-                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:text-white dark:border-gray-600 dark:focus:ring-indigo-400 disabled:cursor-wait disabled:opacity-50"
-              />
-              <label for="remember_me" class="ml-2 block text-sm text-black">
-                Remember me
-              </label>
-            </div>
-            <div class="text-sm">
-              <a
-                class="font-medium text-green-600 hover:text-green-500"
-                href=""
-              >
-                Forgot your password?
-              </a>
-            </div>
-          </div>
-          <div>
-            <button
-              data-testid="login"
-              type="submit"
-              class="group relative flex w-full justify-center rounded-md border bg-green-200 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-600"
-            >
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-              </span>
-              Sign In
-            </button>
-          </div>
-        </form>
-        <div class="m-auto mt-6 w-fit md:mt-8">
-          <span class="m-auto dark:text-black"
-            >Don't have an account?
-            <a class="font-semibold text-green-600" href="/register"
-              >Create Account</a
-            >
-          </span>
-        </div>
-      </div>
-    </div>
+<div class="bg-green-50 flex items-center justify-center min-h-screen font-[sans-serif]">
+<div class="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+  <div class="flex items-center justify-center mb-6">
+      <svg class="w-16 h-16 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2a10 10 0 00-10 10 10 10 0 0010 10 10 10 0 0010-10A10 10 0 0012 2zM4 12a8 8 0 1116 0A8 8 0 014 12zm8-5a5 5 0 00-5 5 5 5 0 0010 0 5 5 0 00-5-5zm0 8a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+      </svg>
   </div>
+  <h2 class="text-2xl font-bold text-gray-800 text-center">Login</h2>
+  <form action="#" method="POST" class="space-y-4">
+      <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">Username</label>
+          <input type="username" id="username" name="username" required
+              class="w-full px-3 py-2 mt-1 text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" id="password" name="password" required
+              class="w-full px-3 py-2 mt-1 text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <button type="submit"
+          class="w-full px-4 py-2 text-white bg-green-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          Sign In
+      </button>
+  </form>
+  <p class="mt-4 text-sm text-center text-gray-600">Don't have an account? <a href="{% url 'register' %}" class="text-green-600 hover:underline">Sign up</a></p>
+</div>
 </div>
 {% endblock %}
