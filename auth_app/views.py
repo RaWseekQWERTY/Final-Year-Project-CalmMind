@@ -8,10 +8,17 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+# Redirect logged-in users away from login/signup pages
+def redirect_if_logged_in(user):
+    return not user.is_authenticated
+
+
 def home_view(request):
     return render(request, 'auth_app/home.html')
 
 def register_view(request):
+    if request.user.is_authenticated:  # Check if the user is logged in
+        return redirect('/')  # Redirect to the homepage or another page
     if request.method == "POST":
         username = request.POST.get("username")
         first_name = request.POST.get("first_name")
@@ -57,6 +64,8 @@ def register_view(request):
     return render(request, "auth_app/register.html")
 
 def login_view(request):
+    if request.user.is_authenticated:  # Check if the user is logged in
+        return redirect('/')  # Redirect to the homepage or another page
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -134,6 +143,8 @@ def update_user_role_page(request, user_id):
         else:
             messages.error(request, 'Invalid role selected.')
     return render(request, "auth_app/update_role_page.html", {'user': user})
+
+
 
 def logout_view(request):
     logout(request)
