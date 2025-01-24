@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from auth_app.models import Doctor
 from .models import Appointment, DoctorAvailability
 from django.contrib.auth.decorators import login_required
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # List of all available doctors
 @login_required
