@@ -9,8 +9,8 @@ ROLE_CHOICES = (
         ('patient', 'Patient'),
     )
 # Extend Django's default User model
-class User(AbstractUser):
 
+class User(AbstractUser):
     GENDER_CHOICES = (
         ('male', 'Male'),
         ('female', 'Female'),
