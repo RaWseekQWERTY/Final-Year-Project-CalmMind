@@ -14,8 +14,11 @@ def redirect_if_logged_in(user):
 
 
 def home_view(request):
-    return render(request, 'auth_app/home.html')
-
+    if request.user.is_authenticated:
+        context = {'role': request.user.role}
+        return render(request, 'auth_app/home.html', context)
+    else:
+        return render(request, 'auth_app/home.html')
 def register_view(request):
     if request.user.is_authenticated:  # Check if the user is logged in
         return redirect('/')  # Redirect to the homepage or another page
@@ -85,21 +88,19 @@ def login_view(request):
                 messages.error(request, "Account is inactive.")
         else:
             messages.error(request, "Invalid username or password.")
-
-        # Debugging output
-        print(f"Username: {username}")
-        print(f"Password: {password}")
-        print(f"User object: {user}")
-        print(f"Is user active: {user.is_active if user else 'N/A'}")
-
     return render(request, "auth_app/login.html")
 
 @login_required
 def patient_dashboard(request):
-    patient = Patient.objects.get(user=request.user)
-    if request.user.is_patient():
-        return render(request, "auth_app/patient.html",{'patient': patient})
-    return HttpResponseForbidden("You are not authorized to view this page.")
+    if hasattr(request.user, 'doctor'):  # Check if the user is a doctor
+        return redirect('doctor_dashboard')  # Redirect to the doctor dashboard
+    
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        return redirect('login')  # Redirect to login or another appropriate page if the patient does not exist
+
+    return render(request, "auth_app/patient.html", {'patient': patient})
 
 @login_required
 def doctor_dashboard(request):

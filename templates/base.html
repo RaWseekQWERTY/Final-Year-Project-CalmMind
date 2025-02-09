@@ -2,24 +2,36 @@
 
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>CalmMind | {% block part %} {% endblock %}</title>
-        <link
-            rel="stylesheet"
-            type="text/css"
-            href="{% static 'css/output.css' %}" />
-    </head>
-    <body>
-       
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CalmMind | {% block part %} {% endblock %}</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{% static 'css/output.css' %}"
+    />
+  </head>
+  <body>
+    {% block navbar %} {% endblock %} {% block content %}{% endblock %}
 
-        {% block navbar %} {% endblock %} {% block content %}{% endblock %}
-        
-        <!-- footer  -->
-         {% block footer%}
-        {% endblock %}
-        <script src="{% static 'js/index.js' %}" defer></script>
-
-    </body>
+    <!-- footer  -->
+    {% block footer%} {% endblock %}
+    <script src="{% static 'js/index.js' %}" defer></script>
+    <script>
+        const notificationToggle = document.getElementById('notificationToggle');
+        const dropDownNoti = document.getElementById('dropDownNoti');
+      
+        notificationToggle.addEventListener('click', () => {
+          dropDownNoti.classList.toggle('hidden');
+        });
+      
+        document.addEventListener('click', (e) => {
+          if (!notificationToggle.contains(e.target) && !dropDownNoti.contains(e.target)) {
+            dropDownNoti.classList.add('hidden');
+          }
+        });
+      </script>
+      
+  </body>
 </html>
