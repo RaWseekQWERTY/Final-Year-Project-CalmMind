@@ -1,6 +1,8 @@
 .DS_Store
 local-cdn/
 
+staticfiles/
+
 # Logs
 logs
 *.log

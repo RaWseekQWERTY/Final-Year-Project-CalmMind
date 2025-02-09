@@ -18,7 +18,6 @@ class User(AbstractUser):
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='male')
-    avatar = models.ImageField(max_length=100, blank=True, null=True,upload_to='images/user')
 
     groups = models.ManyToManyField(
         'auth.Group',
@@ -50,7 +49,7 @@ class Patient(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     contact_number = models.CharField(max_length=15, null=True, blank=True)
-    featured_image = models.ImageField(upload_to='images/patients', default='patients/user-default.png', null=True, blank=True)
+    featured_image = models.ImageField(upload_to='images/patients/', default='images/patients/def-avatar.jpg', null=True, blank=True)
     # Chat
     #login_status = models.CharField(max_length=200, null=True, blank=True, default="offline")
 
@@ -66,7 +65,7 @@ class Doctor(models.Model):
     contact_number = models.CharField(max_length=15, null=True, blank=True)
     visiting_hour = models.TimeField(max_length=200, null=True, blank=True)
     consultation_fee = models.IntegerField(null=True, blank=True)
-    featured_image = models.ImageField(upload_to='images/doctor', default='patients/user-default.png', null=True, blank=True)
+    featured_image = models.ImageField(upload_to='images/doctor/', default='images/doctor/doc-def.png', null=True, blank=True)
 
 
     # Education

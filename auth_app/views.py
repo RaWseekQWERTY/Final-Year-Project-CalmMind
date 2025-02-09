@@ -96,8 +96,9 @@ def login_view(request):
 
 @login_required
 def patient_dashboard(request):
+    patient = Patient.objects.get(user=request.user)
     if request.user.is_patient():
-        return render(request, "auth_app/patient.html")
+        return render(request, "auth_app/patient.html",{'patient': patient})
     return HttpResponseForbidden("You are not authorized to view this page.")
 
 @login_required
