@@ -3,31 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor List</title>
+    <title>CalmMind - Therapist Directory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Available Doctors</h1>
-    {% if no_doctors %}
-        <p>No available doctors at the moment.</p>
-    {% else %}
-        <table border="1">
-            <tr>
-                <th>Name</th>
-                <th>Specialization</th>
-                <th>Contact</th>
-                <th>Action</th>
-            </tr>
-            {% for doctor in doctors %}
-            <tr>
-                <td>{{ doctor.user.get_full_name }}</td>
-                <td>{{ doctor.specialization }}</td>
-                <td>{{ doctor.contact_number }}</td>
-                <td>
-                    <a href="{% url 'book_appointment' doctor.id %}">Book Appointment</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% endif %}
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="text-teal-600 font-bold text-xl">🌿 CalmMind</div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="text-gray-600">Home</a>
+                    <a href="#" class="text-gray-600">Doctors</a>
+                    <a href="#" class="text-gray-600">Services</a>
+                    <a href="#" class="text-gray-600">Resources</a>
+                    <button class="p-2">🔍</button>
+                    <button class="p-2">🔔</button>
+                    <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex gap-8">
+            <!-- Filters Sidebar -->
+            <div class="w-64 flex-shrink-0">
+                <h2 class="text-lg font-semibold mb-4">Filters</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Specialty</label>
+                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                            <option>All Specialties</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Gender</label>
+                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                            <option>Any Gender</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Language</label>
+                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                            <option>All Languages</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Availability</label>
+                        <div class="mt-2 space-y-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                <label class="ml-2 text-sm text-gray-600">Available Today</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                <label class="ml-2 text-sm text-gray-600">This Week</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Therapist List -->
+            <div class="flex-1 space-y-6">
+                <!-- Therapist Card 1 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-start gap-6">
+                        <img src="/api/placeholder/100/100" alt="Dr. Sarah Johnson" class="w-24 h-24 rounded-lg object-cover">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-xl font-semibold">Dr. Sarah Johnson</h3>
+                                    <p class="text-gray-600">Clinical Psychologist</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-yellow-400">⭐</span>
+                                    <span class="ml-1">4.9 (127 reviews)</span>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-gray-600">Specializing in anxiety, depression, and trauma recovery with 15+ years of experience</p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Anxiety</span>
+                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Depression</span>
+                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Trauma</span>
+                            </div>
+                            <div class="mt-4 flex items-center justify-between">
+                                <div class="text-gray-600">
+                                    <span>45 min session</span>
+                                    <span class="mx-2">•</span>
+                                    <span>150 USD</span>
+                                </div>
+                                <button class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">Book Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Therapist Card 2 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-start gap-6">
+                        <img src="/api/placeholder/100/100" alt="Dr. Michael Chen" class="w-24 h-24 rounded-lg object-cover">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-xl font-semibold">Dr. Michael Chen</h3>
+                                    <p class="text-gray-600">Psychiatrist</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-yellow-400">⭐</span>
+                                    <span class="ml-1">4.8 (88 reviews)</span>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-gray-600">Expert in mood disorders and cognitive behavioral therapy with a focus on young adults</p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">CBT</span>
+                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Mood Disorders</span>
+                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Young Adults</span>
+                            </div>
+                            <div class="mt-4 flex items-center justify-between">
+                                <div class="text-gray-600">
+                                    <span>60 min session</span>
+                                    <span class="mx-2">•</span>
+                                    <span>180 USD</span>
+                                </div>
+                                <button class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">Book Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div class="text-teal-600 font-bold">🌿 CalmMind</div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-600">Facebook</a>
+                    <a href="#" class="text-gray-600">Twitter</a>
+                    <a href="#" class="text-gray-600">Instagram</a>
+                    <a href="#" class="text-gray-600">LinkedIn</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
