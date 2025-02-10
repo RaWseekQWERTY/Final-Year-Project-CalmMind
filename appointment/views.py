@@ -2,20 +2,68 @@ from django.shortcuts import render, redirect, get_object_or_404
 from auth_app.models import Doctor
 from .models import Appointment, DoctorAvailability
 from django.contrib.auth.decorators import login_required
-from datetime import datetime
+from datetime import datetime,time,timedelta
+from django.db.models import Q
 
 # List of all available doctors
 @login_required
 def doctor_list(request):
+    # Get filter parameters from the request
+    specialty = request.GET.get('specialty', '')
+    gender = request.GET.get('gender', '')
+    available_today = request.GET.get('available_today', False)
+    available_this_week = request.GET.get('available_this_week', False)
+
+    # Start with all doctors
     doctors = Doctor.objects.all()
+
+    # Apply filters
+    if specialty:
+        doctors = doctors.filter(specialization__icontains=specialty)
+    if gender:
+        doctors = doctors.filter(user__gender=gender)  # Filter by gender in the User model
+
+    # Filter by availability
+    if available_today or available_this_week:
+        today = datetime.today().date()
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+
+        availability_filters = Q()
+        if available_today:
+            availability_filters |= Q(information__visiting_hours_start__lte=time(23, 59, 59), information__visiting_hours_end__gte=time(0, 0, 0))
+        if available_this_week:
+            availability_filters |= Q(information__visiting_hours_start__lte=time(23, 59, 59), information__visiting_hours_end__gte=time(0, 0, 0))
+
+        doctors = doctors.filter(availability_filters)
+
+    # Check if no doctors are available
+    no_doctors = not doctors.exists()
+
+    # Fetch availability information for each doctor
+    doctor_data = []
+    for doctor in doctors:
+        availability = DoctorAvailability.objects.filter(doctor=doctor).first()
+        doctor_data.append({
+            'doctor': doctor,
+            'availability': availability
+        })
+
+    # Get unique specializations for the filter dropdown
+    specializations = Doctor.objects.values_list('specialization', flat=True).distinct()
+
     context = {
-        'doctors': doctors,
-        'no_doctors': not doctors.exists(), 
+        'doctor_data': doctor_data,
+        'no_doctors': no_doctors,
+        'specializations': specializations,
+        'selected_specialty': specialty,
+        'selected_gender': gender,
+        'available_today': available_today,
+        'available_this_week': available_this_week,
     }
     return render(request, 'appointment/doctor_list.html', context)
 
 # Appointment booking view
-
 @login_required
 def book_appointment(request, doctor_id):
     doctor = get_object_or_404(Doctor, id=doctor_id)

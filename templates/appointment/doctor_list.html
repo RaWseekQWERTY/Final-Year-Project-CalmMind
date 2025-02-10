@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalmMind - Therapist Directory</title>
+    <title>Doctor List - CalmMind</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
@@ -33,112 +33,95 @@
             <!-- Filters Sidebar -->
             <div class="w-64 flex-shrink-0">
                 <h2 class="text-lg font-semibold mb-4">Filters</h2>
-                
-                <div class="space-y-4">
-                    <div>
+                <form method="GET" action="{% url 'doctor_list' %}">
+                    <!-- Specialty Filter -->
+                    <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700">Specialty</label>
-                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                            <option>All Specialties</option>
+                        <select name="specialty" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                            <option value="">All Specialties</option>
+                            {% for specialization in specializations %}
+                                <option value="{{ specialization }}" {% if specialization == selected_specialty %}selected{% endif %}>{{ specialization }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
-                    <div>
+                    <!-- Gender Filter -->
+                    <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700">Gender</label>
-                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                            <option>Any Gender</option>
+                        <select name="gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                            <option value="">Any Gender</option>
+                            <option value="Male" {% if selected_gender == "Male" %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if selected_gender == "Female" %}selected{% endif %}>Female</option>
+                            <option value="Other" {% if selected_gender == "Other" %}selected{% endif %}>Other</option>
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Language</label>
-                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                            <option>All Languages</option>
-                        </select>
-                    </div>
-
-                    <div>
+                    <!-- Availability Filter -->
+                    <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700">Availability</label>
                         <div class="mt-2 space-y-2">
                             <div class="flex items-center">
-                                <input type="checkbox" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                <input type="checkbox" name="available_today" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500" {% if available_today %}checked{% endif %}>
                                 <label class="ml-2 text-sm text-gray-600">Available Today</label>
                             </div>
                             <div class="flex items-center">
-                                <input type="checkbox" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                <input type="checkbox" name="available_this_week" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500" {% if available_this_week %}checked{% endif %}>
                                 <label class="ml-2 text-sm text-gray-600">This Week</label>
                             </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">Apply Filters</button>
+                </form>
             </div>
 
-            <!-- Therapist List -->
+            <!-- Doctor List -->
             <div class="flex-1 space-y-6">
-                <!-- Therapist Card 1 -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-start gap-6">
-                        <img src="/api/placeholder/100/100" alt="Dr. Sarah Johnson" class="w-24 h-24 rounded-lg object-cover">
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-xl font-semibold">Dr. Sarah Johnson</h3>
-                                    <p class="text-gray-600">Clinical Psychologist</p>
+                <h1 class="text-2xl font-bold mb-6">Available Doctors</h1>
+                {% if no_doctors %}
+                    <p class="text-gray-600">No available doctors at the moment.</p>
+                {% else %}
+                    {% for data in doctor_data %}
+                    <!-- Doctor Card -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-start gap-6">
+                            <!-- Doctor Image -->
+                            <img src="{{ data.doctor.featured_image.url }}" alt="{{ data.doctor.user.get_full_name }}" class="w-24 h-24 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="text-xl font-semibold">{{ data.doctor.user.get_full_name }}</h3>
+                                        <p class="text-gray-600">{{ data.doctor.specialization }}</p>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-yellow-400">⭐</span>
+                                        <span class="ml-1">4.9 (127 reviews)</span>
+                                    </div>
                                 </div>
-                                <div class="flex items-center">
-                                    <span class="text-yellow-400">⭐</span>
-                                    <span class="ml-1">4.9 (127 reviews)</span>
+                                <p class="mt-2 text-gray-600">
+                                    <strong>Education:</strong> {{ data.doctor.degree }} from {{ data.doctor.institute }} ({{ data.doctor.completion_year }})<br>
+                                    <strong>Experience:</strong> {{ data.doctor.designation }} at {{ data.doctor.work_place }} ({{ data.doctor.start_year }} - {{ data.doctor.end_year }})
+                                </p>
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                    <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">{{ data.doctor.specialization }}</span>
+                                    <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">{{ data.doctor.contact_number }}</span>
                                 </div>
-                            </div>
-                            <p class="mt-2 text-gray-600">Specializing in anxiety, depression, and trauma recovery with 15+ years of experience</p>
-                            <div class="mt-4 flex flex-wrap gap-2">
-                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Anxiety</span>
-                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Depression</span>
-                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Trauma</span>
-                            </div>
-                            <div class="mt-4 flex items-center justify-between">
-                                <div class="text-gray-600">
-                                    <span>45 min session</span>
-                                    <span class="mx-2">•</span>
-                                    <span>150 USD</span>
+                                <div class="mt-4 flex items-center justify-between">
+                                    <div class="text-gray-600">
+                                        <span>Consultation Fee: {{ data.availability.consultation_fee }} USD</span>
+                                        <span class="mx-2">•</span>
+                                        <span>Visiting Hours: {{ data.availability.visiting_hours_start|time:"H:i" }} - {{ data.availability.visiting_hours_end|time:"H:i" }}</span>
+                                        <span class="mx-2">•</span>
+                                        <span>Location: {{ data.availability.location }}</span>
+                                    </div>
+                                    <a href="{% url 'book_appointment' data.doctor.id %}" class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">Book Appointment</a>
                                 </div>
-                                <button class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">Book Now</button>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Therapist Card 2 -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-start gap-6">
-                        <img src="/api/placeholder/100/100" alt="Dr. Michael Chen" class="w-24 h-24 rounded-lg object-cover">
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-xl font-semibold">Dr. Michael Chen</h3>
-                                    <p class="text-gray-600">Psychiatrist</p>
-                                </div>
-                                <div class="flex items-center">
-                                    <span class="text-yellow-400">⭐</span>
-                                    <span class="ml-1">4.8 (88 reviews)</span>
-                                </div>
-                            </div>
-                            <p class="mt-2 text-gray-600">Expert in mood disorders and cognitive behavioral therapy with a focus on young adults</p>
-                            <div class="mt-4 flex flex-wrap gap-2">
-                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">CBT</span>
-                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Mood Disorders</span>
-                                <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm">Young Adults</span>
-                            </div>
-                            <div class="mt-4 flex items-center justify-between">
-                                <div class="text-gray-600">
-                                    <span>60 min session</span>
-                                    <span class="mx-2">•</span>
-                                    <span>180 USD</span>
-                                </div>
-                                <button class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">Book Now</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    {% endfor %}
+                {% endif %}
             </div>
         </div>
     </div>
