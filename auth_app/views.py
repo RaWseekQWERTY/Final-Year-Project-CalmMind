@@ -14,11 +14,9 @@ def redirect_if_logged_in(user):
 
 
 def home_view(request):
-    if request.user.is_authenticated:
-        context = {'role': request.user.role}
-        return render(request, 'auth_app/home.html', context)
-    else:
-        return render(request, 'auth_app/home.html')
+    context = {'role': getattr(request.user, 'role', None)}
+    return render(request, 'auth_app/home.html', context)
+
 def register_view(request):
     if request.user.is_authenticated:  # Check if the user is logged in
         return redirect('/')  # Redirect to the homepage or another page
