@@ -65,28 +65,33 @@ def register_view(request):
     return render(request, "auth_app/register.html")
 
 def login_view(request):
-    if request.user.is_authenticated:  # Check if the user is logged in
+    if request.user.is_authenticated:  # Check if the user is already logged in
         return redirect('/')  # Redirect to the homepage or another page
+
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
-
         user = authenticate(request, username=username, password=password)
 
         if user:
             if user.is_active:  # Ensure the user is active
                 login(request, user)
+                # Redirect based on the 'next' parameter or user role
+                next_url = request.POST.get('next', '/')
                 if user.role == "patient":
-                    return redirect("patient_dashboard")
+                    return redirect(next_url) if next_url else redirect("patient_dashboard")
                 elif user.role == "doctor":
-                    return redirect("doctor_dashboard")
+                    return redirect(next_url) if next_url else redirect("doctor_dashboard")
                 elif user.role == "admin":
-                    return redirect("admin_dashboard")
+                    return redirect(next_url) if next_url else redirect("admin_dashboard")
             else:
                 messages.error(request, "Account is inactive.")
         else:
             messages.error(request, "Invalid username or password.")
-    return render(request, "auth_app/login.html")
+
+    # Pass the 'next' parameter to the template for the hidden input field
+    next_url = request.GET.get('next', '')
+    return render(request, "auth_app/login.html", {'next': next_url})
 
 @login_required
 def patient_dashboard(request):

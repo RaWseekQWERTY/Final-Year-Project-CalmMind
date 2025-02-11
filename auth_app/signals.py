@@ -1,13 +1,13 @@
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from .models import User, Patient, Doctor
+from appointment.models import DoctorAvailability
 
 @receiver(pre_save, sender=User)
 def handle_role_change(sender, instance, **kwargs):
     if instance.pk:  # Ensure it's an update, not a creation
         # Get the existing user instance from the database
         old_instance = sender.objects.get(pk=instance.pk)
-
         # Check if the role has changed
         if old_instance.role != instance.role:
             # Delete the old profile
@@ -20,4 +20,21 @@ def handle_role_change(sender, instance, **kwargs):
             if instance.role == 'patient':
                 Patient.objects.get_or_create(user=instance)
             elif instance.role == 'doctor':
-                Doctor.objects.get_or_create(user=instance)
+                doctor, created = Doctor.objects.get_or_create(
+                    user=instance,
+                    defaults={
+                        'license_number': f"DOC-{instance.id}",
+                        'specialization': "General Practitioner",
+                        'featured_image': "images/doctors/doc-def.png"
+                    }
+                )
+                # Create DoctorAvailability if it doesn't exist
+                DoctorAvailability.objects.get_or_create(
+                    doctor=doctor,
+                    defaults={
+                        'visiting_hours_start': '09:00:00',
+                        'visiting_hours_end': '16:00:00',
+                        'consultation_fee': 100,  # Default fee
+                        'location': "Hospital Main Building"  # Default location
+                    }
+                )

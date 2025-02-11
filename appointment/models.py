@@ -11,7 +11,6 @@ class Appointment(models.Model):
         ('Confirmed', 'Confirmed'),
         ('Cancelled', 'Cancelled'),
     ]
-
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="appointments")
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name="appointments")
     appointment_date = models.DateField()
@@ -20,6 +19,9 @@ class Appointment(models.Model):
     notes = models.TextField(null=True, blank=True)  # Optional message from the patient to the doctor
     location = models.CharField(max_length=255, null=True, blank=True)  # Location of the appointment
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Appointment with {self.doctor} on {self.appointment_date} at {self.appointment_time} - {self.status}"
 
     def __str__(self):
         return f"Appointment with {self.doctor} on {self.appointment_date} at {self.appointment_time} - {self.status}"

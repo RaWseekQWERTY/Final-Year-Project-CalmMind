@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from auth_app.models import User, Doctor, Patient
+from appointment.models import DoctorAvailability
 
 class CustomUserAdmin(UserAdmin):
     fieldsets = (
@@ -19,11 +20,21 @@ class CustomUserAdmin(UserAdmin):
                 # Ensure the user does not already have a Doctor profile
                 if not hasattr(obj, 'doctor_profile'):
                     # Create a Doctor instance with a default license number and image
-                    Doctor.objects.create(
+                    doctor = Doctor.objects.create(
                         user=obj,
                         license_number=f"DOC-{obj.id}",  # Generate a unique license number
                         specialization="General Practitioner",  # Default specialization
                         featured_image="images/doctors/doc-def.png"  # Default doctor image
+                    )
+                    # Create DoctorAvailability for the new doctor
+                    DoctorAvailability.objects.get_or_create(
+                        doctor=doctor,
+                        defaults={
+                            'visiting_hours_start': '09:00:00',
+                            'visiting_hours_end': '16:00:00',
+                            'consultation_fee': 100,  # Default fee
+                            'location': "Hospital Main Building"  # Default location
+                        }
                     )
                 # Update the user's featured_image to the default doctor image
                 obj.featured_image = "images/doctors/doc-def.png"
@@ -37,7 +48,6 @@ class CustomUserAdmin(UserAdmin):
                     )
                 # Update the user's featured_image to the default patient image
                 obj.featured_image = "images/patients/def-avatar.jpg"
-
         super().save_model(request, obj, form, change)
 
 admin.site.register(User, CustomUserAdmin)

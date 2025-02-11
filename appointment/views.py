@@ -3,7 +3,9 @@ from auth_app.models import Doctor
 from .models import Appointment, DoctorAvailability
 from django.contrib.auth.decorators import login_required
 from datetime import datetime,time,timedelta
+from django.utils import timezone
 from django.db.models import Q
+from django.contrib import messages
 
 # List of all available doctors
 @login_required
@@ -60,14 +62,29 @@ def doctor_list(request):
         'selected_gender': gender,
         'available_today': available_today,
         'available_this_week': available_this_week,
+        'role': getattr(request.user, 'role', None),
     }
     return render(request, 'appointment/doctor_list.html', context)
 
 # Appointment booking view
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from datetime import datetime
+from django.utils import timezone
+from .models import Doctor, DoctorAvailability, Appointment
+
 @login_required
 def book_appointment(request, doctor_id):
     doctor = get_object_or_404(Doctor, id=doctor_id)
     availability = get_object_or_404(DoctorAvailability, doctor=doctor)
+
+    # Prepare context for rendering
+    context = {
+        'doctor': doctor,
+        'availability': availability,
+        'role': getattr(request.user, 'role', None),  # Pass user role
+        'error_message': None,  # Initialize error message
+    }
 
     if request.method == 'POST':
         appointment_date = request.POST.get('appointment_date')
@@ -79,15 +96,29 @@ def book_appointment(request, doctor_id):
         appointment_date_obj = datetime.strptime(appointment_date, "%Y-%m-%d").date()
         appointment_time_obj = datetime.strptime(appointment_time, "%H:%M").time()
 
+        # Combine date and time into a single datetime object
+        appointment_datetime_naive = datetime.combine(appointment_date_obj, appointment_time_obj)
+
+        # Make the combined datetime timezone-aware
+        appointment_datetime = timezone.make_aware(appointment_datetime_naive)
+
+        # Get the current datetime (timezone-aware)
+        current_datetime = timezone.now()
+
+        # Check if the appointment date/time is in the past
+        if appointment_datetime < current_datetime:
+            context['error_message'] = "Appointments cannot be booked for past dates or times."
+            return render(request, 'appointment/book_appointment.html', context)
+
         # Check if the appointment date is a weekend
         if appointment_date_obj.weekday() in [5, 6]:  # Saturday or Sunday
-            error_message = "Appointments cannot be booked on weekends (Saturday or Sunday)."
-            return render(request, 'appointment/book_appointment.html', {'doctor': doctor, 'error_message': error_message})
+            context['error_message'] = "Appointments cannot be booked on weekends (Saturday or Sunday)."
+            return render(request, 'appointment/book_appointment.html', context)
 
         # Check if the appointment time is within visiting hours
         if not (availability.visiting_hours_start <= appointment_time_obj <= availability.visiting_hours_end):
-            error_message = "The selected time is outside the doctor's visiting hours."
-            return render(request, 'appointment/book_appointment.html', {'doctor': doctor, 'error_message': error_message})
+            context['error_message'] = "The selected time is outside the doctor's visiting hours."
+            return render(request, 'appointment/book_appointment.html', context)
 
         # Check if the doctor is already booked for the selected date and time
         existing_appointment = Appointment.objects.filter(
@@ -95,12 +126,11 @@ def book_appointment(request, doctor_id):
             appointment_date=appointment_date_obj,
             appointment_time=appointment_time_obj
         ).exists()
-
         if existing_appointment:
-            error_message = "The doctor is already booked for the selected date and time."
-            return render(request, 'appointment/book_appointment.html', {'doctor': doctor, 'error_message': error_message})
+            context['error_message'] = "The doctor is already booked for the selected date and time."
+            return render(request, 'appointment/book_appointment.html', context)
 
-        #Create the appointment if all checks pass
+        # Create the appointment if all checks pass
         Appointment.objects.create(
             patient=request.user.patient_profile,
             doctor=doctor,
@@ -109,9 +139,15 @@ def book_appointment(request, doctor_id):
             location=location,
             notes=notes,
         )
+        
+                # Add a success message
+        messages.success(
+            request,
+            f"Your appointment with Dr. {doctor.user.get_full_name()} has been booked for {appointment_date} at {appointment_time}."
+        )
         return redirect('doctor_list')  # Redirect to doctor list or another page
 
-    return render(request, 'appointment/book_appointment.html', {'doctor': doctor})
+    return render(request, 'appointment/book_appointment.html', context)
 
 @login_required
 def doctor_availability_register(request, doctor_id):
