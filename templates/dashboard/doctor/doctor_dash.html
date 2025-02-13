@@ -5,8 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CalmMind Dashboard</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.259.0/umd/lucide.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
 </head>
 <body class="bg-gray-50">
   <div class="min-h-screen flex">
@@ -59,7 +58,7 @@
       </header>
 
       <!-- Stats -->
-      <div class="grid grid-cols-4 gap-6 mb-8">
+      <div class="flex justify-between items-center gap-6 mb-8">
         <div class="bg-white p-6 rounded-xl shadow-sm">
           <div class="text-sm text-gray-500">Total Doctors</div>
           <div class="text-2xl font-semibold mt-1">{{ total_doctors }}</div>
@@ -155,8 +154,6 @@
     </main>
   </div>
   <script>
-    // Initialize Lucide icons
-    lucide.createIcons();
   </script>
 </body>
 </html>
