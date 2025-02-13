@@ -64,16 +64,16 @@ def doctor_appointments(request):
                 )
                 messages.success(request, 'Appointment confirmed successfully.')
 
-            elif new_status == 'Canceled' and appointment.status != 'Canceled':
-                appointment.status = 'Canceled'
+            elif new_status == 'Cancelled' and appointment.status != 'Cancelled':
+                appointment.status = 'Cancelled'
                 appointment.save()
                 
                 # Notify patient about the cancellation
                 Notification.objects.create(
                     user=appointment.patient.user,
-                    message=f"Your appointment on {appointment.appointment_date} has been canceled."
+                    message=f"Your appointment on {appointment.appointment_date} has been cancelled."
                 )
-                messages.success(request, 'Appointment canceled successfully.')
+                messages.success(request, 'Appointment cancelled successfully.')
 
             elif new_status == 'Pending' and appointment.status != 'Pending':
                 appointment.status = 'Pending'

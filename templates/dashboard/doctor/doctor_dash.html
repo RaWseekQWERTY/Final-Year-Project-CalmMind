@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,26 +13,29 @@
     <!-- Sidebar -->
     <aside class="w-64 bg-white border-r border-gray-200 p-4">
       <div class="flex items-center mb-8">
-        <h1 class="text-xl font-semibold text-teal-600">CalmMind</h1>
+         <!-- Logo Section -->
+      <a class="text-3xl font-bold leading-none" href="/">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-10" />
+      </a>
       </div>
       <nav class="space-y-2">
         <a href="{% url 'dashboard-doctor' %}" class="flex items-center space-x-3 px-4 py-2 text-teal-600 bg-teal-50 rounded-lg">
           <i data-lucide="home" class="w-5 h-5"></i>
-          <span>Dashboard</span>
+          <span class="text-green-500">Dashboard</span>
         </a>
-        <a href="{% url 'doctor-appointments' %}" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
+        <a href="{% url 'doctor-appointments' %}" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
           <i data-lucide="calendar" class="w-5 h-5"></i>
           <span>Appointments</span>
         </a>
-        <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
+        <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
           <i data-lucide="users" class="w-5 h-5"></i>
           <span>Patients</span>
         </a>
-        <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
+        <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
           <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
           <span>Analytics</span>
         </a>
-        <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
+        <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
           <i data-lucide="settings" class="w-5 h-5"></i>
           <span>Settings</span>
         </a>

@@ -47,6 +47,10 @@
             </svg>        
           </button>
           <div id="dropDownNoti" class="hidden absolute right-0 mt-2 shadow-lg bg-white rounded-lg w-[410px] max-h-[300px] overflow-auto z-50">
+            <div class="border-b border-gray-200">
+              <h3 class="px-4 py-3 text-lg font-semibold">Notifications</h3>
+              <hr>
+            </div>
             <div class="py-4" id="notificationList">
               <p class="text-sm text-gray-500 px-4">No new notifications.</p>
             </div>
@@ -272,7 +276,8 @@
         if (data.length === 0) {
           notificationList.innerHTML = '<p class="text-sm text-gray-500 px-4">No new notifications.</p>';
         } else {
-          data.forEach(notification => {
+          // Get only the first 5 notifications
+          data.slice(0, 5).forEach(notification => {
             const item = `
               <div class="p-4 hover:bg-gray-50">
                 <p class="font-semibold text-sm text-gray-900">${notification.message}</p>
