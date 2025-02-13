@@ -66,12 +66,6 @@ def doctor_list(request):
     }
     return render(request, 'appointment/doctor_list.html', context)
 
-# Appointment booking view
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from datetime import datetime
-from django.utils import timezone
-from .models import Doctor, DoctorAvailability, Appointment
 
 @login_required
 def book_appointment(request, doctor_id):

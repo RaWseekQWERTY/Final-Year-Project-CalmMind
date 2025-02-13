@@ -22,13 +22,42 @@ def register_view(request):
         return redirect('/')  # Redirect to the homepage or another page
     if request.method == "POST":
         username = request.POST.get("username")
-        first_name = request.POST.get("first_name")
+        first_name = request.POST.get("first_name") 
         last_name = request.POST.get("last_name")
         email = request.POST.get("email")
         gender = "male"
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
         role = "patient"
+
+        # Validate required fields
+        if not all([username, first_name, last_name, email, password, confirm_password]):
+            messages.error(request, "All fields are required.")
+            return render(request, "auth_app/register.html")
+
+        # Validate username length and characters
+        if len(username) < 3:
+            messages.error(request, "Username must be at least 3 characters long.")
+            return render(request, "auth_app/register.html")
+        if not username.isalnum():
+            messages.error(request, "Username can only contain letters and numbers.")
+            return render(request, "auth_app/register.html")
+
+        # Validate email format
+        if '@' not in email or '.' not in email:
+            messages.error(request, "Please enter a valid email address.")
+            return render(request, "auth_app/register.html")
+
+        # Validate password strength
+        if len(password) < 8:
+            messages.error(request, "Password must be at least 8 characters long.")
+            return render(request, "auth_app/register.html")
+        if not any(char.isdigit() for char in password):
+            messages.error(request, "Password must contain at least one number.")
+            return render(request, "auth_app/register.html")
+        if not any(char.isupper() for char in password):
+            messages.error(request, "Password must contain at least one uppercase letter.")
+            return render(request, "auth_app/register.html")
 
         # Check if passwords match
         if password != confirm_password:
@@ -43,24 +72,34 @@ def register_view(request):
             messages.error(request, "Email is already registered.")
             return render(request, "auth_app/register.html")
 
-        # Create the user
-        user = User.objects.create(
-            username=username,
-            first_name=first_name,
-            last_name=last_name,
-            email=email
-        )
-        if role == "admin":
-            user.is_staff = True
+        # Validate name fields
+        if not first_name.isalpha() or not last_name.isalpha():
+            messages.error(request, "Names can only contain letters.")
+            return render(request, "auth_app/register.html")
 
-        user.set_password(password)  # Hash the password
-        user.save()
+        try:
+            # Create the user
+            user = User.objects.create(
+                username=username,
+                first_name=first_name,
+                last_name=last_name,
+                email=email
+            )
+            if role == "admin":
+                user.is_staff = True
 
-        # Create associated Patient profile
-        Patient.objects.create(user=user)
+            user.set_password(password)  # Hash the password
+            user.save()
 
-        messages.success(request, "Registration successful. Please log in.")
-        return redirect("login")
+            # Create associated Patient profile
+            Patient.objects.create(user=user)
+
+            messages.success(request, "Registration successful. Please log in.")
+            return redirect("login")
+            
+        except Exception as e:
+            messages.error(request, "An error occurred during registration. Please try again.")
+            return render(request, "auth_app/register.html")
 
     return render(request, "auth_app/register.html")
 

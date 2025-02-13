@@ -47,33 +47,12 @@
             </svg>        
           </button>
           <div id="dropDownNoti" class="hidden absolute right-0 mt-2 shadow-lg bg-white rounded-lg w-[410px] max-h-[300px] overflow-auto z-50">
-            <div class="py-4">
-              <div class="flex items-center justify-between px-4 mb-4">
-                <button class="text-xs text-green-600 hover:text-green-700">Clear all</button>
-                <button class="text-xs text-green-600 hover:text-green-700">Mark as read</button>
-              </div>
-              <ul class="divide-y divide-gray-100">
-                <li class="p-4 hover:bg-gray-50">
-                  <div class="flex items-center">
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                      <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                      </svg>
-                    </div>
-                    <div class="ml-4">
-                      <p class="font-semibold text-sm text-gray-900">Appointment Reminder</p>
-                      <p class="text-sm text-gray-500">Your appointment is scheduled for tomorrow</p>
-                      <p class="text-xs text-green-600 mt-1">10 minutes ago</p>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-              <div class="px-4 py-2 border-t">
-                <button class="text-sm text-green-600 hover:text-green-700">View all notifications</button>
-              </div>
+            <div class="py-4" id="notificationList">
+              <p class="text-sm text-gray-500 px-4">No new notifications.</p>
             </div>
           </div>
         </div>
+      
     
         <!-- User Dropdown -->
         <div class="relative">
@@ -279,18 +258,32 @@
     {% endblock %}
     <script src="{% static 'js/index.js' %}" defer></script>
     <script>
-        const notificationToggle = document.getElementById('notificationToggle');
-        const dropDownNoti = document.getElementById('dropDownNoti');
-      
-        notificationToggle.addEventListener('click', () => {
-          dropDownNoti.classList.toggle('hidden');
-        });
-      
-        document.addEventListener('click', (e) => {
-          if (!notificationToggle.contains(e.target) && !dropDownNoti.contains(e.target)) {
-            dropDownNoti.classList.add('hidden');
-          }
-        });
+     document.getElementById('notificationToggle').addEventListener('click', function() {
+    const dropdown = document.getElementById('dropDownNoti');
+    dropdown.classList.toggle('hidden');
+
+    // Fetch notifications when the dropdown is opened
+    fetch("{% url 'get-notifications' %}")
+      .then(response => response.json())
+      .then(data => {
+        const notificationList = document.getElementById('notificationList');
+        notificationList.innerHTML = '';  // Clear the existing content
+
+        if (data.length === 0) {
+          notificationList.innerHTML = '<p class="text-sm text-gray-500 px-4">No new notifications.</p>';
+        } else {
+          data.forEach(notification => {
+            const item = `
+              <div class="p-4 hover:bg-gray-50">
+                <p class="font-semibold text-sm text-gray-900">${notification.message}</p>
+                <p class="text-xs text-green-600 mt-1">${notification.created_at}</p>
+              </div>`;
+            notificationList.innerHTML += item;
+          });
+        }
+      })
+      .catch(error => console.error('Error fetching notifications:', error));
+  });
       </script>
       
   </body>
