@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalmMind - {% block title %}Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-gray-200 p-4">
+            <div class="flex items-center mb-8">
+                <a class="text-3xl font-bold leading-none" href="/">
+                    <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-10" />
+                </a>
+            </div>
+            <nav class="space-y-2">
+                <a href="{% url 'dashboard-doctor' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'dashboard-doctor' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span {% if request.resolver_match.url_name == 'dashboard-doctor' %}class="text-green-500"{% endif %}>Dashboard</span>
+                </a>
+                <a href="{% url 'doctor-appointments' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-appointments' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <span {% if request.resolver_match.url_name == 'doctor-appointments' %}class="text-green-500"{% endif %}>Appointments</span>
+                </a>
+                <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span>Patients</span>
+                </a>
+                <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <header class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-semibold">{% block header_title %}Dashboard{% endblock %}</h2>
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-gray-600 hover:bg-gray-100 rounded-full">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <img src="{{ request.user.doctor_profile.featured_image.url }}" alt="Doctor profile" class="w-8 h-8 rounded-full">
+                        <span class="text-sm font-medium">{{ request.user.get_full_name }}</span>
+                    </div>
+                </div>
+            </header>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mb-4 p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

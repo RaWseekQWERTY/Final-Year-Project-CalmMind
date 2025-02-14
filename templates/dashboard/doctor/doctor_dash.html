@@ -1,64 +1,11 @@
+{% extends 'dashboard/doctor/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CalmMind Dashboard</title>
-  <link rel="stylesheet" href="{% static 'css/output.css' %}">
-</head>
-<body class="bg-gray-50">
-  <div class="min-h-screen flex">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r border-gray-200 p-4">
-      <div class="flex items-center mb-8">
-         <!-- Logo Section -->
-      <a class="text-3xl font-bold leading-none" href="/">
-        <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-10" />
-      </a>
-      </div>
-      <nav class="space-y-2">
-        <a href="{% url 'dashboard-doctor' %}" class="flex items-center space-x-3 px-4 py-2 text-teal-600 bg-teal-50 rounded-lg">
-          <i data-lucide="home" class="w-5 h-5"></i>
-          <span class="text-green-500">Dashboard</span>
-        </a>
-        <a href="{% url 'doctor-appointments' %}" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
-          <i data-lucide="calendar" class="w-5 h-5"></i>
-          <span>Appointments</span>
-        </a>
-        <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
-          <i data-lucide="users" class="w-5 h-5"></i>
-          <span>Patients</span>
-        </a>
-        <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
-          <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-          <span>Analytics</span>
-        </a>
-        <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
-          <i data-lucide="settings" class="w-5 h-5"></i>
-          <span>Settings</span>
-        </a>
-      </nav>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-8">
-      <header class="flex justify-between items-center mb-8">
-        <h2 class="text-2xl font-semibold">Dashboard</h2>
-        <div class="flex items-center space-x-4">
-          <button class="p-2 text-gray-600 hover:bg-gray-100 rounded-full">
-            <i data-lucide="bell" class="w-5 h-5"></i>
-          </button>
-          <div class="flex items-center space-x-2">
-            <!-- Doctor's profile image -->
-            <img src="{{ request.user.doctor_profile.featured_image.url }}" alt="Doctor profile" class="w-8 h-8 rounded-full">
-            <span class="text-sm font-medium">{{ request.user.get_full_name }}</span>
-          </div>
-        </div>
-      </header>
+{% block title %}Dashboard{% endblock %}
 
-      <!-- Stats -->
-      <div class="flex justify-between items-center gap-6 mb-8">
+{% block content %}
+    <!-- Stats -->
+    <div class="flex justify-between items-center gap-6 mb-8">
         <div class="bg-white p-6 rounded-xl shadow-sm">
           <div class="text-sm text-gray-500">Total Doctors</div>
           <div class="text-2xl font-semibold mt-1">{{ total_doctors }}</div>
@@ -75,9 +22,9 @@
           <div class="text-sm text-gray-500">Appointments Today</div>
           <div class="text-2xl font-semibold mt-1">{{ today_appointments }}</div>
         </div>
-      </div>
+    </div>
 
-      <div class="flex gap-6">
+    <div class="flex gap-6">
         <!-- Appointments Section -->
         <div class="flex-1">
           <div class="flex justify-between items-center mb-4">
@@ -150,10 +97,5 @@
             </div>
           </div>
         </div>
-      </div>
-    </main>
-  </div>
-  <script>
-  </script>
-</body>
-</html>
+    </div>
+{% endblock %}
