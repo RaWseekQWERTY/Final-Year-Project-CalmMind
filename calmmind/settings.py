@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'auth_app',
     'appointment',
     'dashboard',
+    'assessment',
 ]
 
 MIDDLEWARE = [

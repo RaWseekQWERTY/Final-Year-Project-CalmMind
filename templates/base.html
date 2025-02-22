@@ -28,12 +28,12 @@
     
       <!-- Navbar Links -->
       <ul class="hidden lg:flex lg:mx-auto lg:items-center lg:w-auto lg:space-x-6">
-        <li><a class="text-sm text-green-600 font-bold" href="/">Home</a></li>
+        <li><a class="text-sm {% if request.resolver_match.url_name == 'home' %}text-green-600 font-bold{% else %}text-gray-400 hover:text-gray-500{% endif %}" href="{% url 'home' %}">Home</a></li>
         <li><a class="text-sm text-gray-400 hover:text-gray-500" href="#">About Us</a></li>
         {% if user.is_authenticated %}
           <li><a class="text-sm text-gray-400 hover:text-gray-500" href="#">Chat Now</a></li>
-          <li><a class="text-sm text-gray-400 hover:text-gray-500" href="#">Appointments</a></li>
-          <li><a class="text-sm text-gray-400 hover:text-gray-500" href="#">Assessment</a></li>
+          <li><a class="text-sm {% if request.resolver_match.url_name == 'doctor_list' %}text-green-600 font-bold{% else %}text-gray-400 hover:text-gray-500{% endif %}" href="{% url 'doctor_list' %}">Appointments</a></li>
+          <li><a class="text-sm {% if request.resolver_match.url_name == 'assessment' %}text-green-600 font-bold{% else %}text-gray-400 hover:text-gray-500{% endif %}" href="{% url 'assessment' %}">Assessment</a></li>
         {% endif %}
       </ul>
     
@@ -122,33 +122,17 @@
         <div>
           <ul>
             <li class="mb-1">
-              <a
-                class="block p-4 text-sm font-semibold text-gray-400 hover:bg-green-50 hover:text-green-600 rounded"
-                href="/"
-                >Home</a
-              >
+              <a class="block p-4 text-sm font-semibold {% if request.resolver_match.url_name == 'home' %}text-green-600{% else %}text-gray-400{% endif %} hover:bg-green-50 hover:text-green-600 rounded" href="{% url 'home' %}">Home</a>
             </li>
             <li class="mb-1">
-              <a
-                class="block p-4 text-sm font-semibold text-gray-400 hover:bg-green-50 hover:text-green-600 rounded"
-                href="#"
-                >About Us</a
-              >
+              <a class="block p-4 text-sm font-semibold text-gray-400 hover:bg-green-50 hover:text-green-600 rounded" href="#">About Us</a>
             </li>
             {% if user.is_authenticated %}
             <li class="mb-1">
-              <a
-                class="block p-4 text-sm font-semibold text-gray-400 hover:bg-green-50 hover:text-green-600 rounded"
-                href="#"
-                >Chat Now</a
-              >
+              <a class="block p-4 text-sm font-semibold text-gray-400 hover:bg-green-50 hover:text-green-600 rounded" href="#">Chat Now</a>
             </li>
             <li class="mb-1">
-              <a
-                class="block p-4 text-sm font-semibold text-gray-400 hover:bg-green-50 hover:text-green-600 rounded"
-                href="#"
-                >Appointments</a
-              >
+              <a class="block p-4 text-sm font-semibold {% if request.resolver_match.url_name == 'doctor_list' %}text-green-600{% else %}text-gray-400{% endif %} hover:bg-green-50 hover:text-green-600 rounded" href="{% url 'doctor_list' %}">Appointments</a>
             </li>
             {% endif %}
           </ul>
