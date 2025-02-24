@@ -68,10 +68,14 @@ def doctor_list(request):
 
 
 @login_required
-def book_appointment(request, doctor_id):
+def book_appointment(request, doctor_id=None):
+    # Check if doctor_id is None or empty
+    if not doctor_id:
+        messages.warning(request, "Please select a doctor from the list to book an appointment.")
+        return redirect('doctor_list')
     doctor = get_object_or_404(Doctor, id=doctor_id)
     availability = get_object_or_404(DoctorAvailability, doctor=doctor)
-
+    
     # Prepare context for rendering
     context = {
         'doctor': doctor,
