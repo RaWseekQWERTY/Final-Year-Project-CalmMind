@@ -33,10 +33,15 @@ def doctor_dashboard(request):
 @login_required
 def get_notifications(request):
     notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:5]
-    data = [{
-        'message': notification.message,
-        'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M:%S')
-    } for notification in notifications]
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    data = {
+        'notifications': [{
+            'message': notification.message,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_read': notification.is_read
+        } for notification in notifications],
+        'unread_count': unread_count
+    }
     return JsonResponse(data, safe=False)
 
 
@@ -110,3 +115,10 @@ def doctor_appointments(request):
         'status_choices': Appointment.STATUS_CHOICES,
     }
     return render(request, 'dashboard/doctor/appointments.html', context)
+
+@login_required
+def mark_notifications_read(request):
+    if request.method == 'POST':
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
