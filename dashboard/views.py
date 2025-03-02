@@ -3,10 +3,14 @@ from django.shortcuts import render, redirect
 from appointment.models import Appointment, DoctorAvailability
 from auth_app.models import Doctor, Patient
 from django.contrib.auth.decorators import login_required
-from datetime import date
+from datetime import date, timedelta
+from django.utils.timezone import now
 from django.contrib import messages
 from django.http import JsonResponse
 from .models import Notification
+from django.db import models
+import plotly.express as px
+import plotly.graph_objects as go
 
 @login_required
 def doctor_dashboard(request):
@@ -122,3 +126,69 @@ def mark_notifications_read(request):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def doctor_analytics(request):
+    doctor_appointments = Appointment.objects.filter(doctor=request.user.doctor_profile)
+
+    # Status counts (Donut Chart)
+    status_counts = doctor_appointments.values('status').annotate(count=models.Count('id'))
+    status_fig = px.pie(
+        data_frame=list(status_counts),
+        names='status',
+        values='count',
+        hole=0.4
+    )
+    status_chart = status_fig.to_html(full_html=False)
+
+    # Daily Appointments (Last 10 days - Bar Chart)
+    daily_appointments = doctor_appointments.values('appointment_date').annotate(
+        count=models.Count('id')
+    ).order_by('-appointment_date')[:10]
+    daily_fig = px.bar(
+        data_frame=list(daily_appointments),
+        x='appointment_date',
+        y='count'
+    )
+    daily_chart = daily_fig.to_html(full_html=False)
+
+    # Appointments by Time of Day (Line Chart)
+    time_slots = doctor_appointments.extra(
+        select={'hour': "EXTRACT(hour FROM appointment_time)"}
+    ).values('hour').annotate(count=models.Count('id')).order_by('hour')
+    time_fig = px.line(
+        data_frame=list(time_slots),
+        x='hour',
+        y='count'
+    )
+    time_chart = time_fig.to_html(full_html=False)
+
+    # Monthly Appointment Trend (New Analysis - Line Chart)
+    one_year_ago = now() - timedelta(days=365)
+    monthly_appointments = (
+        doctor_appointments.filter(appointment_date__gte=one_year_ago)
+        .annotate(month=models.functions.TruncMonth('appointment_date'))
+        .values('month')
+        .annotate(count=models.Count('id'))
+        .order_by('month')
+    )
+    monthly_fig = px.line(
+        data_frame=list(monthly_appointments),
+        x='month',
+        y='count',
+        title="Monthly Appointment Trend (Last 12 Months)"
+    )
+    monthly_chart = monthly_fig.to_html(full_html=False)
+
+    context = {
+        'status_chart': status_chart,
+        'daily_chart': daily_chart,
+        'time_chart': time_chart,
+        'monthly_chart': monthly_chart,
+        'total_appointments': doctor_appointments.count(),
+        'confirmed_count': doctor_appointments.filter(status='Confirmed').count(),
+        'pending_count': doctor_appointments.filter(status='Pending').count(),
+        'cancelled_count': doctor_appointments.filter(status='Cancelled').count(),
+    }
+
+    return render(request, 'dashboard/doctor/analytics.html', context)

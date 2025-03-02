@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CalmMind - {% block title %}Dashboard{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-gray-50">
@@ -19,23 +20,23 @@
             </div>
             <nav class="space-y-2">
                 <a href="{% url 'dashboard-doctor' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'dashboard-doctor' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
-                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <i class="fas fa-home"></i>
                     <span {% if request.resolver_match.url_name == 'dashboard-doctor' %}class="text-green-500"{% endif %}>Dashboard</span>
                 </a>
                 <a href="{% url 'doctor-appointments' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-appointments' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
-                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <i class="fas fa-calendar-alt"></i>
                     <span {% if request.resolver_match.url_name == 'doctor-appointments' %}class="text-green-500"{% endif %}>Appointments</span>
                 </a>
                 <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
-                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <i class="fas fa-users"></i>
                     <span>Patients</span>
                 </a>
-                <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
-                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-                    <span>Analytics</span>
+                <a href="{% url 'doctor-analytics' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-analytics' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
+                    <i class="fas fa-chart-line"></i>
+                    <span {% if request.resolver_match.url_name == 'doctor-analytics' %}class="text-green-500"{% endif %}>Analytics</span>
                 </a>
                 <a href="" class="flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <i class="fas fa-cog"></i>
                     <span>Settings</span>
                 </a>
             </nav>

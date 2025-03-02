@@ -6,4 +6,5 @@ urlpatterns = [
     path('doctor_appointments', views.doctor_appointments, name='doctor-appointments'),
     path('get-notifications/', views.get_notifications, name='get-notifications'),
     path('mark-notifications-read/', views.mark_notifications_read, name='mark-notifications-read'),
+    path('doctor_analytics/', views.doctor_analytics, name='doctor-analytics'),
 ]

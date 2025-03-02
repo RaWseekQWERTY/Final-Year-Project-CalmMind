@@ -1,0 +1,40 @@
+{% extends 'dashboard/doctor/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="grid grid-cols-2 grid-rows-2 gap-4">
+        <!-- Chart 1 -->
+        <div class="card">
+            <div class="card-header">Appointment Status Distribution</div>
+            <div class="card-body">
+                {{ status_chart|safe }}
+            </div>
+        </div>
+
+        <!-- Chart 2 -->
+        <div class="card">
+            <div class="card-header">Daily Appointments (Last 10 Days)</div>
+            <div class="card-body">
+                {{ daily_chart|safe }}
+            </div>
+        </div>
+
+        <!-- Chart 3 -->
+        <div class="card">
+            <div class="card-header">Appointments by Time of Day</div>
+            <div class="card-body">
+                {{ time_chart|safe }}
+            </div>
+        </div>
+
+        <!-- Chart 4 (New Analysis - Monthly Trend) -->
+        <div class="card">
+            <div class="card-header">Monthly Appointment Trend (Last Year)</div>
+            <div class="card-body">
+                {{ monthly_chart|safe }}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
