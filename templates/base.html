@@ -30,12 +30,12 @@
       <!-- Navbar Links -->
       <ul class="hidden lg:flex lg:mx-auto lg:items-center lg:w-auto lg:space-x-6">
         <li><a class="text-sm {% if request.resolver_match.url_name == 'home' %}text-green-600 font-bold{% else %}text-gray-400 hover:text-gray-500{% endif %}" href="{% url 'home' %}">Home</a></li>
-        <li><a class="text-sm text-gray-400 hover:text-gray-500" href="#">About Us</a></li>
         {% if user.is_authenticated %}
-          <li><a class="text-sm text-gray-400 hover:text-gray-500" href="#">Chat Now</a></li>
+          <li><a class="text-sm {% if request.resolver_match.url_name == 'chat' %}text-green-600 font-bold{% else %}text-gray-400 hover:text-gray-500{% endif %}" href="{% url 'chat' %}">Chat Now</a></li>
           <li><a class="text-sm {% if request.resolver_match.url_name == 'doctor_list' %}text-green-600 font-bold{% else %}text-gray-400 hover:text-gray-500{% endif %}" href="{% url 'doctor_list' %}">Appointments</a></li>
           <li><a class="text-sm {% if request.resolver_match.url_name == 'assessment' %}text-green-600 font-bold{% else %}text-gray-400 hover:text-gray-500{% endif %}" href="{% url 'assessment' %}">Assessment</a></li>
         {% endif %}
+        <li><a class="text-sm text-gray-400 hover:text-gray-500" href="#">About Us</a></li>
       </ul>
     
       <!-- Right-Side Section -->
