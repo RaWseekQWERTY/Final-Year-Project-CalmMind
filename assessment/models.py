@@ -23,6 +23,7 @@ class PHQ9Assessment(models.Model):
     q7 = models.PositiveSmallIntegerField()
     q8 = models.PositiveSmallIntegerField()
     q9 = models.PositiveSmallIntegerField()
+    q10 = models.PositiveSmallIntegerField(default=0)
     
     # Actual assessment results
     score = models.PositiveSmallIntegerField()
@@ -32,7 +33,7 @@ class PHQ9Assessment(models.Model):
     predicted_score = models.PositiveSmallIntegerField(null=True, blank=True)
     predicted_depression_level = models.CharField(max_length=1, choices=DEPRESSION_LEVELS, null=True, blank=True)
     
-    assessment_date = models.DateField(default=now)
+    assessment_date = models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):
         """Calculate total score and assign depression level before saving."""

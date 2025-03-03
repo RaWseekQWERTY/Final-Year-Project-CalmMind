@@ -155,3 +155,7 @@ SESSION_COOKIE_AGE = 300  # 5 minutes in seconds
 SESSION_SAVE_EVERY_REQUEST = True  # Reset the session timer on every request
 
 LOGIN_URL = 'login' 
+
+# Define the path to the ML model
+ML_MODELS_PATH = os.path.join(BASE_DIR, 'ml_models')
+PHQ9_MODEL_PATH = os.path.join(ML_MODELS_PATH, 'multi_output_phq9_model.pkl')
