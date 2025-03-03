@@ -3,10 +3,11 @@ from django.utils.timezone import now
 
 class PHQ9Assessment(models.Model):
     DEPRESSION_LEVELS = [
-        ('0', 'No Depression'),
-        ('1', 'Low Depression'),
-        ('2', 'Mild Depression'),
-        ('3', 'Severe Depression'),
+        ('0', 'None'),
+        ('1', 'Mild'),
+        ('2', 'Moderate'),
+        ('3', 'Moderately Severe'),
+        ('4', 'Severe'),
     ]
     
     assessment_id = models.AutoField(primary_key=True)
@@ -38,15 +39,17 @@ class PHQ9Assessment(models.Model):
         self.score = sum([self.q1, self.q2, self.q3, self.q4, self.q5, 
                           self.q6, self.q7, self.q8, self.q9])
         
-        # Assign depression level based on score
+        # Assign depression level based on the updated 5-class PHQ-9 ranges
         if self.score <= 4:
-            self.depression_level = '0'  # No Depression
+            self.depression_level = '0'  # None
         elif 5 <= self.score <= 9:
-            self.depression_level = '1'  # Low Depression
+            self.depression_level = '1'  # Mild
         elif 10 <= self.score <= 14:
-            self.depression_level = '2'  # Mild Depression
+            self.depression_level = '2'  # Moderate
+        elif 15 <= self.score <= 19:
+            self.depression_level = '3'  # Moderately Severe
         else:
-            self.depression_level = '3'  # Severe Depression
+            self.depression_level = '4'  # Severe
         
         super().save(*args, **kwargs)
 
