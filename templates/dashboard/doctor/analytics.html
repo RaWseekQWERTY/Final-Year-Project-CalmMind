@@ -7,7 +7,13 @@
         <div class="card">
             <div class="card-header">Appointment Status Distribution</div>
             <div class="card-body">
-                {{ status_chart|safe }}
+                {% if total_appointments > 0 %}
+                    {{ status_chart|safe }}
+                {% else %}
+                    <div class="flex items-center justify-center h-full">
+                        <p class="text-gray-500">No available data</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
@@ -15,7 +21,13 @@
         <div class="card">
             <div class="card-header">Daily Appointments (Last 10 Days)</div>
             <div class="card-body">
-                {{ daily_chart|safe }}
+                {% if total_appointments > 0 %}
+                    {{ daily_chart|safe }}
+                {% else %}
+                    <div class="flex items-center justify-center h-full">
+                        <p class="text-gray-500">No available data</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
@@ -23,15 +35,27 @@
         <div class="card">
             <div class="card-header">Appointments by Time of Day</div>
             <div class="card-body">
-                {{ time_chart|safe }}
+                {% if total_appointments > 0 %}
+                    {{ time_chart|safe }}
+                {% else %}
+                    <div class="flex items-center justify-center h-full">
+                        <p class="text-gray-500">No available data</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Chart 4 (New Analysis - Monthly Trend) -->
+        <!-- Chart 4 ( - Monthly Trend) -->
         <div class="card">
             <div class="card-header">Monthly Appointment Trend (Last Year)</div>
             <div class="card-body">
-                {{ monthly_chart|safe }}
+                {% if total_appointments > 0 %}
+                    {{ monthly_chart|safe }}
+                {% else %}
+                    <div class="flex items-center justify-center h-full">
+                        <p class="text-gray-500">No available data</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

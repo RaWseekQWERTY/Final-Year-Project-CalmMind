@@ -34,7 +34,7 @@ def handle_role_change(sender, instance, **kwargs):
                     defaults={
                         'visiting_hours_start': '09:00:00',
                         'visiting_hours_end': '16:00:00',
-                        'consultation_fee': 100,  # Default fee
-                        'location': "Hospital Main Building"  # Default location
+                        'consultation_fee': 0.2,  # Default fee
+                        'location': "Patan Hospital Main Building"  # Default location
                     }
                 )
