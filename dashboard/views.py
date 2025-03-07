@@ -11,6 +11,8 @@ from .models import Notification
 from django.db import models
 import plotly.express as px
 import plotly.graph_objects as go
+from django.db.models import Q
+from datetime import datetime
 
 @login_required
 def doctor_dashboard(request):
@@ -163,7 +165,7 @@ def doctor_analytics(request):
     )
     time_chart = time_fig.to_html(full_html=False)
 
-    # Monthly Appointment Trend (New Analysis - Line Chart)
+    # Monthly Appointment Trend
     one_year_ago = now() - timedelta(days=365)
     monthly_appointments = (
         doctor_appointments.filter(appointment_date__gte=one_year_ago)
@@ -192,3 +194,67 @@ def doctor_analytics(request):
     }
 
     return render(request, 'dashboard/doctor/analytics.html', context)
+
+@login_required
+def doctor_appointments_data(request):
+    # Get the parameters from DataTables
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+    status_filter = request.GET.get('status', '')
+
+    # Base queryset
+    queryset = Appointment.objects.filter(doctor=request.user.doctor_profile)
+
+    # Apply status filter if provided
+    if status_filter:
+        queryset = queryset.filter(status=status_filter)
+
+    # Apply search
+    if search_value:
+        queryset = queryset.filter(
+            Q(patient__user__first_name__icontains=search_value) |
+            Q(patient__user__last_name__icontains=search_value) |
+            Q(location__icontains=search_value) |
+            Q(status__icontains=search_value)
+        )
+
+    # Total records before filtering
+    total_records = queryset.count()
+
+    # Order
+    order_column = int(request.GET.get('order[0][column]', 0))
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+    
+    # Define orderable columns
+    orderable_columns = ['patient__user__first_name', 'appointment_date', 'appointment_time', 'status', 'location']
+    if order_column < len(orderable_columns):
+        order_field = orderable_columns[order_column]
+        if order_dir == 'desc':
+            order_field = f'-{order_field}'
+        queryset = queryset.order_by(order_field)
+
+    # Pagination
+    queryset = queryset[start:start + length]
+
+    # Prepare data for response
+    data = []
+    for appointment in queryset:
+        data.append({
+            'id': appointment.id,
+            'patient': appointment.patient.user.get_full_name(),
+            'patient_image': appointment.patient.featured_image.url,
+            'appointment_date': appointment.appointment_date.strftime('%Y-%m-%d'),
+            'appointment_time': appointment.appointment_time.strftime('%H:%M'),
+            'status': appointment.status,
+            'location': appointment.location,
+            'notes': appointment.notes or ''
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': total_records,
+        'data': data
+    })
