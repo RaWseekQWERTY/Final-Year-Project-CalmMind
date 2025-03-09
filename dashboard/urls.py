@@ -8,4 +8,6 @@ urlpatterns = [
     path('get-notifications/', views.get_notifications, name='get-notifications'),
     path('mark-notifications-read/', views.mark_notifications_read, name='mark-notifications-read'),
     path('doctor_analytics/', views.doctor_analytics, name='doctor-analytics'),
+    path('doctor/patients/', views.doctor_patients_view, name='doctor_patients'),
+    path('doctor/patients/data/', views.doctor_appointments_data, name='doctor_patients_data'),
 ]

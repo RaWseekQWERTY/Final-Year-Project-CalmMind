@@ -2,8 +2,9 @@
 from django.shortcuts import render, redirect
 from appointment.models import Appointment, DoctorAvailability
 from auth_app.models import Doctor, Patient
+from assessment.models import PHQ9Assessment
 from django.contrib.auth.decorators import login_required
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from django.utils.timezone import now
 from django.contrib import messages
 from django.http import JsonResponse
@@ -11,8 +12,8 @@ from .models import Notification
 from django.db import models
 import plotly.express as px
 import plotly.graph_objects as go
-from django.db.models import Q
-from datetime import datetime
+from django.db.models import Q, Count, Max
+
 
 @login_required
 def doctor_dashboard(request):
@@ -258,3 +259,71 @@ def doctor_appointments_data(request):
         'recordsFiltered': total_records,
         'data': data
     })
+    
+@login_required
+def doctor_patients_view(request):
+    """Renders the doctor’s patient dashboard."""
+    return render(request, 'dashboard/doctor/patients_info.html')  
+DEPRESSION_LEVELS = {
+    '0': 'None',
+    '1': 'Mild',
+    '2': 'Moderate',
+    '3': 'Moderately Severe',
+    '4': 'Severe'
+}
+@login_required
+def doctor_patients_data(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    # Get unique patients with last appointment & count total appointments
+    patient_queryset = (
+        Appointment.objects
+        .filter(doctor=request.user.doctor_profile)
+        .values('patient')  
+        .annotate(
+            last_appointment=Max('appointment_date'),
+            total_appointments=Count('id')
+        )
+        .order_by('-last_appointment')
+    )
+
+    # Apply search filter
+    if search_value:
+        patient_queryset = patient_queryset.filter(
+            Q(patient__user__first_name__icontains=search_value) |
+            Q(patient__user__last_name__icontains=search_value) |
+            Q(patient__contact_number__icontains=search_value)
+        )
+
+    total_records = patient_queryset.count()
+    patient_queryset = patient_queryset[start:start + length]
+
+    data = []
+    for patient_info in patient_queryset:
+        patient = Appointment.objects.filter(
+            patient_id=patient_info['patient'],
+            doctor=request.user.doctor_profile
+        ).order_by('-appointment_date').first()
+
+        phq9_level = patient.phq9_score if hasattr(patient, 'phq9_score') else '0'
+        phq9_severity = DEPRESSION_LEVELS.get(str(phq9_level), 'Unknown')
+
+        data.append({
+            'id': patient.patient.id,
+            'patient_name': patient.user.get_full_name(),
+            'contact_number': patient.patient.contact_number,
+            'last_appointment': patient_info['last_appointment'].strftime('%Y-%m-%d'),
+            'total_appointments': patient_info['total_appointments'],
+            'phq9_severity': phq9_severity,
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': total_records,
+        'data': data
+    })
+
