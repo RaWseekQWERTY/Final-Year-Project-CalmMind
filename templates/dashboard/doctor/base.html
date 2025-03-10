@@ -27,9 +27,9 @@
                     <i class="fas fa-calendar-alt"></i>
                     <span {% if request.resolver_match.url_name == 'doctor-appointments' %}class="text-green-500"{% endif %}>Appointments</span>
                 </a>
-                <a href="{% url 'doctor_patients' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor_patients' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
+                <a href="{% url 'doctor-patients' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-patients' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
                     <i class="fas fa-chart-line"></i>
-                    <span {% if request.resolver_match.url_name == 'doctor_patients' %}class="text-green-500"{% endif %}>Patient</span>
+                    <span {% if request.resolver_match.url_name == 'doctor-patients' %}class="text-green-500"{% endif %}>Patient</span>
                 </a>
                 <a href="{% url 'doctor-analytics' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-analytics' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
                     <i class="fas fa-chart-line"></i>

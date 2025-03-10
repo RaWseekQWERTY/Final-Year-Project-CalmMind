@@ -260,70 +260,156 @@ def doctor_appointments_data(request):
         'data': data
     })
     
+    
 @login_required
-def doctor_patients_view(request):
-    """Renders the doctor’s patient dashboard."""
-    return render(request, 'dashboard/doctor/patients_info.html')  
-DEPRESSION_LEVELS = {
-    '0': 'None',
-    '1': 'Mild',
-    '2': 'Moderate',
-    '3': 'Moderately Severe',
-    '4': 'Severe'
-}
+def patients_info(request):
+    """Render the patients' information page for doctors."""
+    return render(request, 'dashboard/doctor/patients_info.html')
+
 @login_required
-def doctor_patients_data(request):
+def patients_info_data(request):
+    """Ajax endpoint for patients DataTable."""
+    doctor = Doctor.objects.get(user=request.user)
+    
+    # Get the parameters from DataTables
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
     search_value = request.GET.get('search[value]', '')
 
-    # Get unique patients with last appointment & count total appointments
-    patient_queryset = (
-        Appointment.objects
-        .filter(doctor=request.user.doctor_profile)
-        .values('patient')  
-        .annotate(
-            last_appointment=Max('appointment_date'),
-            total_appointments=Count('id')
-        )
-        .order_by('-last_appointment')
-    )
+    # Base queryset
+    queryset = Patient.objects.filter(appointments__doctor=doctor).distinct()
 
-    # Apply search filter
+    # Total records before filtering
+    total_records = queryset.count()
+
+    # Apply search
     if search_value:
-        patient_queryset = patient_queryset.filter(
-            Q(patient__user__first_name__icontains=search_value) |
-            Q(patient__user__last_name__icontains=search_value) |
-            Q(patient__contact_number__icontains=search_value)
+        queryset = queryset.filter(
+            Q(user__first_name__icontains=search_value) |
+            Q(user__last_name__icontains=search_value) |
+            Q(contact_number__icontains=search_value)
         )
 
-    total_records = patient_queryset.count()
-    patient_queryset = patient_queryset[start:start + length]
+    # Total records after filtering
+    filtered_records = queryset.count()
+
+    # Ordering
+    order_column = request.GET.get('order[0][column]', 0)
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+    
+    # Define column ordering
+    columns = ['user__first_name', 'contact_number', 'appointments__appointment_date', 'id', 'id']
+    
+    if order_column and int(order_column) < len(columns):
+        order_field = columns[int(order_column)]
+        if order_dir == 'desc':
+            order_field = f'-{order_field}'
+        queryset = queryset.order_by(order_field)
+
+    # Pagination
+    queryset = queryset[start:start + length]
 
     data = []
-    for patient_info in patient_queryset:
-        patient = Appointment.objects.filter(
-            patient_id=patient_info['patient'],
-            doctor=request.user.doctor_profile
-        ).order_by('-appointment_date').first()
-
-        phq9_level = patient.phq9_score if hasattr(patient, 'phq9_score') else '0'
-        phq9_severity = DEPRESSION_LEVELS.get(str(phq9_level), 'Unknown')
-
+    for patient in queryset:
+        appointments = Appointment.objects.filter(patient=patient, doctor=doctor)
+        latest_assessment = PHQ9Assessment.objects.filter(patient=patient).order_by('-assessment_date').first()
+        
+        # Get severity and create appropriate badge
+        severity = latest_assessment.get_depression_level_display() if latest_assessment else "Not Assessed"
+        severity_badge = ''
+        
+        if severity == 'Mild':
+            severity_badge = '<span class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm">Mild</span>'
+        elif severity == 'Moderate':
+            severity_badge = '<span class="bg-yellow-100 text-yellow-800 rounded-full px-3 py-1 text-sm">Moderate</span>'
+        elif severity == 'Severe':
+            severity_badge = '<span class="bg-red-100 text-red-800 rounded-full px-3 py-1 text-sm">Severe</span>'
+        else:
+            severity_badge = '<span class="bg-gray-100 text-gray-800 rounded-full px-3 py-1 text-sm">Not Assessed</span>'
+        
         data.append({
-            'id': patient.patient.id,
-            'patient_name': patient.user.get_full_name(),
-            'contact_number': patient.patient.contact_number,
-            'last_appointment': patient_info['last_appointment'].strftime('%Y-%m-%d'),
-            'total_appointments': patient_info['total_appointments'],
-            'phq9_severity': phq9_severity,
+            'full_name': patient.user.get_full_name(),
+            'contact_number': patient.contact_number or '',
+            'last_appointment': appointments.latest('appointment_date').appointment_date.strftime('%Y-%m-%d') if appointments.exists() else "N/A",
+            'total_appointments': appointments.count(),
+            'phq9_severity': severity_badge,  # Use the HTML badge instead of plain text
+            'actions': f'<button onclick="openPatientModal({patient.id})" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded">View</button>'
         })
 
     return JsonResponse({
         'draw': draw,
         'recordsTotal': total_records,
-        'recordsFiltered': total_records,
+        'recordsFiltered': filtered_records,
         'data': data
     })
 
+@login_required
+def patient_modal_data(request, patient_id):
+    """Endpoint to get patient data for the modal."""
+    doctor = Doctor.objects.get(user=request.user)
+    patient = Patient.objects.get(id=patient_id)
+    
+    # Patient Information
+    patient_info = {
+        'full_name': patient.user.get_full_name(),
+        'email': patient.user.email,
+        'contact_number': patient.contact_number or '',
+        'date_of_birth': patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else '',
+        'gender': 'male',
+        'address': patient.address or '',
+    }
+    
+    # Appointments History
+    appointments = Appointment.objects.filter(
+        patient=patient,
+        doctor=doctor
+    ).order_by('-appointment_date')
+    
+    appointments_data = []
+    for apt in appointments:
+        appointments_data.append({
+            'id': apt.id,
+            'date': apt.appointment_date.strftime('%Y-%m-%d'),
+            'time': apt.appointment_time.strftime('%H:%M'),
+            'status': apt.status,
+            'location': apt.location,
+            'notes': apt.notes or '',
+        })
+    
+    # PHQ-9 Assessments History
+    assessments = PHQ9Assessment.objects.filter(
+        patient=patient
+    ).order_by('-assessment_date')
+    
+    assessments_data = []
+    for assessment in assessments:
+        assessments_data.append({
+            'date': assessment.assessment_date.strftime('%Y-%m-%d'),
+            'score': assessment.predicted_score,
+            'severity': assessment.get_depression_level_display()
+        })
+    
+    data = {
+        'patient_info': patient_info,
+        'appointments': appointments_data,
+        'assessments': assessments_data,
+    }
+    
+    return JsonResponse(data)
+
+@login_required
+def update_appointment_notes(request, appointment_id):
+    """Endpoint to update appointment notes."""
+    if request.method == 'POST':
+        try:
+            appointment = Appointment.objects.get(
+                id=appointment_id,
+                doctor=request.user.doctor_profile
+            )
+            appointment.notes = request.POST.get('notes', '')
+            appointment.save()
+            return JsonResponse({'status': 'success'})
+        except Appointment.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Appointment not found'}, status=404)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
