@@ -25,6 +25,7 @@
 {% endblock %}
 
 {% block content %}
+{% csrf_token %}
 <div class="container mx-auto px-4 py-8">
     <div class="bg-white rounded-lg shadow-lg p-6">
         <table id="patients-table" class="w-full">
@@ -43,16 +44,27 @@
 </div>
 
 <!-- Patient Details Modal -->
-<div id="patientModal" class="hidden flex justify-center items-center fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full px-12">
-    <div class="relative top-20 mx-auto p-5 border shadow-lg rounded-md bg-white" style="width: 70%;">
+<div id="patientModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto">
+    <div class="relative mx-auto p-5 border shadow-lg rounded-md bg-white mt-20" style="width: 70%;">
         <div class="mt-3">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-medium text-gray-900">Patient Details</h3>
-                <button onclick="closePatientModal()" class="text-gray-500 hover:text-gray-700">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button 
+                        onclick="exportPatientPDF(currentPatientId)" 
+                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586L7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd" />
+                        </svg>
+                        Export PDF
+                    </button>
+                    <button onclick="closePatientModal()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Tabs -->
@@ -71,36 +83,29 @@
             </div>
 
             <!-- Tab Contents -->
-            <div id="infoTab" class="tab-content">
-                <!-- Content will be dynamically inserted -->
-            </div>
-            <div id="appointmentsTab" class="tab-content hidden">
-                <!-- Content will be dynamically inserted -->
-            </div>
-            <div id="assessmentsTab" class="tab-content hidden">
-                <!-- Content will be dynamically inserted -->
-            </div>
+            <div id="infoTab" class="tab-content"></div>
+            <div id="appointmentsTab" class="tab-content hidden"></div>
+            <div id="assessmentsTab" class="tab-content hidden"></div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Add jQuery if not already included -->
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Add DataTables JS -->
 <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 
 <script>
+    let hasUnsavedChanges = false;
+    let currentPatientId = null;
+
     $(document).ready(function() {
         $('#patients-table').DataTable({
             processing: true,
             serverSide: true,
-            ajax: {
-                url: "{% url 'doctor-patients-data' %}",
-                type: "GET"
-            },
+            ajax: "{% url 'doctor-patients-data' %}",
             columns: [
                 { data: 'full_name' },
                 { data: 'contact_number' },
@@ -109,11 +114,7 @@
                 { 
                     data: 'phq9_severity',
                     render: function(data, type, row) {
-                        if (type === 'display') {
-                            return data;  // Return the HTML badge
-                        }
-                        // For sorting/filtering, return the text content
-                        return $(data).text();
+                        return type === 'display' ? data : $(data).text();
                     }
                 },
                 { 
@@ -123,47 +124,33 @@
                 }
             ],
             responsive: true,
-            pageLength: 10,
-            language: {
-                processing: "Loading...",
-                zeroRecords: "No matching records found",
-                info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                infoEmpty: "Showing 0 to 0 of 0 entries",
-                infoFiltered: "(filtered from _MAX_ total entries)"
-            }
+            pageLength: 10
         });
     });
 
-    // Handle View button click
-    $('#patients-table').on('click', '.view-patient', function() {
-        var patientId = $(this).data('patient-id');
-        openPatientModal(patientId);
-    });
-
     function openPatientModal(patientId) {
+        currentPatientId = patientId;
         document.getElementById('patientModal').classList.remove('hidden');
         loadPatientData(patientId);
     }
 
     function closePatientModal() {
-        document.getElementById('patientModal').classList.add('hidden');
+        if (hasUnsavedChanges) {
+            if (confirm('You have unsaved changes. Are you sure you want to close?')) {
+                document.getElementById('patientModal').classList.add('hidden');
+                hasUnsavedChanges = false;
+                currentPatientId = null;
+            }
+        } else {
+            document.getElementById('patientModal').classList.add('hidden');
+            currentPatientId = null;
+        }
     }
 
     function switchTab(tabName) {
-        // Hide all tab contents
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.add('hidden');
-        });
-
-        // Remove active class from all buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active-tab');
-        });
-
-        // Show the selected tab content
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
         document.getElementById(tabName + 'Tab').classList.remove('hidden');
-
-        // Add active class to the selected button
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active-tab');
     }
 
@@ -173,6 +160,7 @@
                 $('#infoTab').html(createPatientInfoHtml(data.patient_info));
                 $('#appointmentsTab').html(createAppointmentsHtml(data.appointments));
                 $('#assessmentsTab').html(createAssessmentsHtml(data.assessments));
+                hasUnsavedChanges = false;
             })
             .fail(function() {
                 alert('Failed to load patient data.');
@@ -226,21 +214,31 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         ${appointments.map(apt => `
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">${apt.date}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">${apt.time}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">${apt.status}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">${apt.location}</td>
+                                <td class="px-6 py-4">${apt.date}</td>
+                                <td class="px-6 py-4">${apt.time}</td>
+                                <td class="px-6 py-4">${apt.status}</td>
+                                <td class="px-6 py-4">${apt.location}</td>
                                 <td class="px-6 py-4">
                                     <textarea 
-                                        class="appointment-notes"
+                                        class="appointment-notes w-full px-3 py-2 border rounded-md"
                                         data-appointment-id="${apt.id}"
-                                        onchange="updateNotes(this)"
+                                        data-original-value="${apt.notes}"
+                                        onchange="handleNotesChange(this)"
                                     >${apt.notes}</textarea>
                                 </td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
+                <div class="mt-4 flex justify-end">
+                    <button 
+                        id="saveNotesBtn"
+                        onclick="saveAllNotes()"
+                        class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded hidden"
+                    >
+                        Save Changes
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -268,6 +266,85 @@
                 </table>
             </div>
         `;
+    }
+
+    function handleNotesChange(textarea) {
+        if (textarea.value !== textarea.dataset.originalValue) {
+            hasUnsavedChanges = true;
+            document.getElementById('saveNotesBtn').classList.remove('hidden');
+        } else {
+            // Check if any other textareas have changes
+            let anyChanges = false;
+            document.querySelectorAll('.appointment-notes').forEach(ta => {
+                if (ta.value !== ta.dataset.originalValue) {
+                    anyChanges = true;
+                }
+            });
+            hasUnsavedChanges = anyChanges;
+            if (!anyChanges) {
+                document.getElementById('saveNotesBtn').classList.add('hidden');
+            }
+        }
+    }
+
+    function saveAllNotes() {
+        const saveButton = document.getElementById('saveNotesBtn');
+        saveButton.disabled = true;
+        saveButton.textContent = 'Saving...';
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const promises = [];
+
+        document.querySelectorAll('.appointment-notes').forEach(textarea => {
+            if (textarea.value !== textarea.dataset.originalValue) {
+                const appointmentId = textarea.dataset.appointmentId;
+                promises.push(
+                    fetch(`/doctor/appointment/${appointmentId}/notes/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: `notes=${encodeURIComponent(textarea.value)}`
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                );
+            }
+        });
+
+        if (promises.length === 0) {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Save Changes';
+            return;
+        }
+
+        Promise.all(promises)
+            .then(results => {
+                console.log('All notes saved successfully:', results);
+                document.querySelectorAll('.appointment-notes').forEach(textarea => {
+                    textarea.dataset.originalValue = textarea.value;
+                });
+                hasUnsavedChanges = false;
+                saveButton.classList.add('hidden');
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Changes';
+                alert('Changes saved successfully!');
+            })
+            .catch(error => {
+                console.error('Error saving notes:', error);
+                alert('Failed to save changes. Please try again.');
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Changes';
+            });
+    }
+
+    function exportPatientPDF(patientId) {
+        window.open(`/doctor/patient/${patientId}/export-pdf/`, '_blank');
     }
 
     // Close modal when clicking outside

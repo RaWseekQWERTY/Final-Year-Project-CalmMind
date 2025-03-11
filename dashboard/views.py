@@ -7,12 +7,18 @@ from django.contrib.auth.decorators import login_required
 from datetime import date, timedelta, datetime
 from django.utils.timezone import now
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from .models import Notification
 from django.db import models
 import plotly.express as px
 import plotly.graph_objects as go
 from django.db.models import Q, Count, Max
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from io import BytesIO
 
 
 @login_required
@@ -334,7 +340,7 @@ def patients_info_data(request):
             'last_appointment': appointments.latest('appointment_date').appointment_date.strftime('%Y-%m-%d') if appointments.exists() else "N/A",
             'total_appointments': appointments.count(),
             'phq9_severity': severity_badge,  # Use the HTML badge instead of plain text
-            'actions': f'<button onclick="openPatientModal({patient.id})" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded">View</button>'
+            'actions': f'<button onclick="openPatientModal({patient.id})" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">View</button>'
         })
 
     return JsonResponse({
@@ -356,7 +362,7 @@ def patient_modal_data(request, patient_id):
         'email': patient.user.email,
         'contact_number': patient.contact_number or '',
         'date_of_birth': patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else '',
-        'gender': 'male',
+        'gender': '',
         'address': patient.address or '',
     }
     
@@ -407,9 +413,139 @@ def update_appointment_notes(request, appointment_id):
                 id=appointment_id,
                 doctor=request.user.doctor_profile
             )
-            appointment.notes = request.POST.get('notes', '')
+            notes = request.POST.get('notes', '')
+            appointment.notes = notes
             appointment.save()
-            return JsonResponse({'status': 'success'})
+            return JsonResponse({'status': 'success', 'notes': notes})
         except Appointment.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Appointment not found'}, status=404)
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+@login_required
+def export_patient_pdf(request, patient_id):
+    # Get the patient and related data
+    try:
+        doctor = request.user.doctor_profile
+        patient = Patient.objects.get(id=patient_id)
+        
+        # Get recent appointments
+        recent_appointments = Appointment.objects.filter(
+            patient=patient,
+            doctor=doctor
+        ).order_by('-appointment_date')[:5]
+        
+        # Get recent assessments
+        recent_assessments = PHQ9Assessment.objects.filter(
+            patient=patient
+        ).order_by('-assessment_date')[:5]
+        
+        # Create the PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        elements = []
+        
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30
+        )
+        elements.append(Paragraph(f"Patient Report - {patient.user.get_full_name()}", title_style))
+        
+        # Patient Information
+        elements.append(Paragraph("Patient Information", styles['Heading2']))
+        patient_info = [
+            ["Full Name:", patient.user.get_full_name()],
+            ["Email:", patient.user.email],
+            ["Contact Number:", patient.contact_number or "N/A"],
+            ["Date of Birth:", patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else "N/A"],
+            ["Gender:", "N/A"],
+            ["Address:", patient.address or "N/A"]
+        ]
+        
+        info_table = Table(patient_info, colWidths=[2*inch, 4*inch])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(info_table)
+        elements.append(Spacer(1, 20))
+        
+        # Recent Appointments
+        elements.append(Paragraph("Recent Appointments", styles['Heading2']))
+        if recent_appointments:
+            appointments_data = [["Date", "Time", "Status", "Notes"]]
+            for apt in recent_appointments:
+                appointments_data.append([
+                    apt.appointment_date.strftime('%Y-%m-%d'),
+                    apt.appointment_time.strftime('%H:%M'),
+                    apt.status,
+                    apt.notes or "N/A"
+                ])
+            
+            apt_table = Table(appointments_data, colWidths=[1.5*inch, 1.5*inch, 1.5*inch, 2.5*inch])
+            apt_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(apt_table)
+        else:
+            elements.append(Paragraph("No recent appointments found.", styles['Normal']))
+        
+        elements.append(Spacer(1, 20))
+        
+        # Recent Assessments
+        elements.append(Paragraph("Recent PHQ-9 Assessments", styles['Heading2']))
+        if recent_assessments:
+            assessments_data = [["Date", "Score", "Severity"]]
+            for assessment in recent_assessments:
+                assessments_data.append([
+                    assessment.assessment_date.strftime('%Y-%m-%d'),
+                    str(assessment.predicted_score),
+                    assessment.get_depression_level_display()
+                ])
+            
+            assess_table = Table(assessments_data, colWidths=[2*inch, 2*inch, 3*inch])
+            assess_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(assess_table)
+        else:
+            elements.append(Paragraph("No recent assessments found.", styles['Normal']))
+        
+        # Generate PDF
+        doc.build(elements)
+        
+        # Get the value of the BytesIO buffer and write it to the response
+        pdf = buffer.getvalue()
+        buffer.close()
+        
+        # Generate the response
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="patient_report_{patient_id}_{datetime.now().strftime("%Y%m%d")}.pdf"'
+        response.write(pdf)
+        
+        return response
+        
+    except Patient.DoesNotExist:
+        return HttpResponse('Patient not found', status=404)
+    except Exception as e:
+        return HttpResponse(f'Error generating PDF: {str(e)}', status=500)

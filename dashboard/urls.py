@@ -12,4 +12,5 @@ urlpatterns = [
     path('doctor_patients/data/', views.patients_info_data, name='doctor-patients-data'),
     path('patient_modal_data/<int:patient_id>/', views.patient_modal_data, name='patient-modal-data'),
     path('update_appointment_notes/<int:appointment_id>/', views.update_appointment_notes, name='update-appointment-notes'),
+    path('doctor/patient/<int:patient_id>/export-pdf/', views.export_patient_pdf, name='export-patient-pdf'),
 ]
