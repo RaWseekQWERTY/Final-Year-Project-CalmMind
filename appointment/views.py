@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from auth_app.models import Doctor
 from .models import Appointment, DoctorAvailability
+from dashboard.models import Notification
 from django.contrib.auth.decorators import login_required
 from datetime import datetime,time,timedelta
 from django.utils import timezone
@@ -129,7 +130,7 @@ def book_appointment(request, doctor_id=None):
             return render(request, 'appointment/book_appointment.html', context)
 
         # Create the appointment if all checks pass
-        Appointment.objects.create(
+        appointment = Appointment.objects.create(
             patient=request.user.patient_profile,
             doctor=doctor,
             appointment_date=appointment_date,
@@ -138,7 +139,12 @@ def book_appointment(request, doctor_id=None):
             notes=notes,
         )
         
-                # Add a success message
+        # Notify doctor about new appointment
+        Notification.objects.create(
+            user=doctor.user,
+            message=f"New appointment request from {request.user.get_full_name()} for {appointment_date} at {appointment_time}."
+        )
+        
         messages.success(
             request,
             f"Your appointment with Dr. {doctor.user.get_full_name()} has been booked for {appointment_date} at {appointment_time}."
@@ -172,6 +178,12 @@ def doctor_availability_register(request, doctor_id):
                 'location': location,
             }
         )
+        
+        Notification.objects.create(
+            user=request.user,
+            message="Your availability settings have been updated successfully."
+        )
+        
         return redirect('doctor_dashboard')
 
     return render(request, 'dashboard/doctor/doctor_availability_form.html', {'doctor': doctor})

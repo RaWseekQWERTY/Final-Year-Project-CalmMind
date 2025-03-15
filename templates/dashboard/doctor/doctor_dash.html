@@ -68,34 +68,70 @@
             <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
             <div class="space-y-3">
               <button class="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50 rounded-lg">
-                <span>Add Medical Notes</span>
-                <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                <a href="{% url 'doctor-patients' %}" class="flex items-center justify-between w-full">
+                    <span>Add Medical Notes</span>
+                </a>
               </button>
               <button class="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50 rounded-lg">
-                <span>Generate Report</span>
-                <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                <a href="{% url 'doctor-patients' %}" class="flex items-center justify-between w-full">
+                    <span>Generate Report</span>
+                </a>
               </button>
             </div>
           </div>
 
           <!-- Notifications -->
           <div class="bg-white p-6 rounded-xl shadow-sm mt-6">
-            <h3 class="text-lg font-semibold mb-4">Recent Notifications</h3>
-            <div class="space-y-4">
-              <div class="text-sm">
-                <div class="font-medium">New appointment request</div>
-                <div class="text-gray-500">5 minutes ago</div>
-              </div>
-              <div class="text-sm">
-                <div class="font-medium">Reminder: Follow-up with patient</div>
-                <div class="text-gray-500">1 hour ago</div>
-              </div>
-              <div class="text-sm">
-                <div class="font-medium">Report generated successfully</div>
-                <div class="text-gray-500">2 hours ago</div>
-              </div>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">Recent Notifications</h3>
+              <button id="markAllRead" class="text-sm text-blue-600 hover:text-blue-800">Mark all as read</button>
+            </div>
+            <div id="notificationsContainer" class="space-y-4 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              <!-- Notifications -->
             </div>
           </div>
         </div>
     </div>
+
+    <script>
+    function fetchNotifications() {
+      fetch('{% url "get-notifications" %}')
+        .then(response => response.json())
+        .then(data => {
+          const container = document.getElementById('notificationsContainer');
+          container.innerHTML = '';
+          
+          data.notifications.forEach(notification => {
+            const timeAgo = moment(notification.created_at).fromNow();
+            const notificationHtml = `
+              <div class="text-sm ${notification.is_read ? 'opacity-60' : ''}">
+                <div class="font-medium">${notification.message}</div>
+                <div class="text-gray-500">${timeAgo}</div>
+              </div>
+            `;
+            container.innerHTML += notificationHtml;
+          });
+        });
+    }
+
+    document.getElementById('markAllRead').addEventListener('click', function() {
+      fetch('{% url "mark-notifications-read" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          fetchNotifications();
+        }
+      });
+    });
+
+    // Initial fetch and setup polling
+    fetchNotifications();
+    setInterval(fetchNotifications, 30000); // Poll every 30 seconds
+    </script>
+
 {% endblock %}

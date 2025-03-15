@@ -200,6 +200,12 @@ def doctor_analytics(request):
         'cancelled_count': doctor_appointments.filter(status='Cancelled').count(),
     }
 
+    # Add notification for report generation
+    Notification.objects.create(
+        user=request.user,
+        message="Analytics report has been generated successfully."
+    )
+
     return render(request, 'dashboard/doctor/analytics.html', context)
 
 @login_required
@@ -542,6 +548,12 @@ def export_patient_pdf(request, patient_id):
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="patient_report_{patient_id}_{datetime.now().strftime("%Y%m%d")}.pdf"'
         response.write(pdf)
+        
+        # Add notification for PDF generation
+        Notification.objects.create(
+            user=request.user,
+            message=f"Patient report for {patient.user.get_full_name()} has been generated."
+        )
         
         return response
         

@@ -120,7 +120,7 @@ def login_view(request):
                 if user.role == "patient":
                     return redirect(next_url) if next_url else redirect("patient_dashboard")
                 elif user.role == "doctor":
-                    return redirect(next_url) if next_url else redirect("doctor_dashboard")
+                    return redirect(next_url) if next_url else redirect("dashboard-doctor")
                 elif user.role == "admin":
                     return redirect(next_url) if next_url else redirect("admin_dashboard")
             else:
