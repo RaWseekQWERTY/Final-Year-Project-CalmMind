@@ -362,7 +362,7 @@ def patient_modal_data(request, patient_id):
         'email': patient.user.email,
         'contact_number': patient.contact_number or '',
         'date_of_birth': patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else '',
-        'gender': '',
+        'gender': patient.user.gender,
         'address': patient.address or '',
     }
     
@@ -461,7 +461,7 @@ def export_patient_pdf(request, patient_id):
             ["Email:", patient.user.email],
             ["Contact Number:", patient.contact_number or "N/A"],
             ["Date of Birth:", patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else "N/A"],
-            ["Gender:", "N/A"],
+            ["Gender:", patient.user.gender],
             ["Address:", patient.address or "N/A"]
         ]
         
