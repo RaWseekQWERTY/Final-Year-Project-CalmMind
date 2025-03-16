@@ -13,4 +13,7 @@ urlpatterns = [
     path('patient_modal_data/<int:patient_id>/', views.patient_modal_data, name='patient-modal-data'),
     path('update_appointment_notes/<int:appointment_id>/', views.update_appointment_notes, name='update-appointment-notes'),
     path('doctor/patient/<int:patient_id>/export-pdf/', views.export_patient_pdf, name='export-patient-pdf'),
+    path('patient_dashboard', views.patient_dashboard, name='dashboard-patient'),
+    path('reschedule-appointment/<int:appointment_id>/', views.reschedule_appointment, name='reschedule-appointment'),
+    path('cancel-appointment/<int:appointment_id>/', views.cancel_appointment, name='cancel-appointment'),
 ]

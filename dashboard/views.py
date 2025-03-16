@@ -1,10 +1,10 @@
 # dashboard/views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from appointment.models import Appointment, DoctorAvailability
 from auth_app.models import Doctor, Patient
 from assessment.models import PHQ9Assessment
 from django.contrib.auth.decorators import login_required
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, time
 from django.utils.timezone import now
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
@@ -19,6 +19,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from io import BytesIO
+from django.views.decorators.http import require_POST
 
 
 @login_required
@@ -165,6 +166,7 @@ def doctor_analytics(request):
     time_slots = doctor_appointments.extra(
         select={'hour': "EXTRACT(hour FROM appointment_time)"}
     ).values('hour').annotate(count=models.Count('id')).order_by('hour')
+    
     time_fig = px.line(
         data_frame=list(time_slots),
         x='hour',
@@ -561,3 +563,207 @@ def export_patient_pdf(request, patient_id):
         return HttpResponse('Patient not found', status=404)
     except Exception as e:
         return HttpResponse(f'Error generating PDF: {str(e)}', status=500)
+
+@login_required
+def patient_dashboard(request):
+    # Get patient's PHQ-9 assessments ordered by date
+    assessments = PHQ9Assessment.objects.filter(
+        patient=request.user.patient_profile
+    ).order_by('assessment_date')
+    
+    # Initialize context
+    context = {}
+    
+    if assessments.exists():
+        # Create plotly figure for assessment history
+        dates = [assessment.assessment_date.strftime('%Y-%m-%d') for assessment in assessments]
+        scores = [assessment.score for assessment in assessments]
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=dates,
+            y=scores,
+            mode='lines+markers',
+            name='PHQ-9 Score',
+            line=dict(color='#10B981'),  # Green color to match the theme
+            marker=dict(size=8)
+        ))
+        
+        fig.update_layout(
+            title='PHQ-9 Score History',
+            xaxis_title='Assessment Date',
+            yaxis_title='Score',
+            hovermode='x unified',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=20, r=20, t=40, b=20),
+            yaxis=dict(gridcolor='rgba(0,0,0,0.1)', range=[0, max(scores) + 5]),
+            xaxis=dict(gridcolor='rgba(0,0,0,0.1)')
+        )
+        
+        # Get latest assessment
+        latest_assessment = assessments.latest('assessment_date')
+        
+        context = {
+            'has_assessments': True,
+            'graph': fig.to_html(full_html=False),
+            'latest_assessment': latest_assessment,
+            'latest_date': latest_assessment.assessment_date.strftime('%B %d, %Y'),
+            'latest_score': latest_assessment.score,
+            'latest_level': latest_assessment.get_depression_level_display(),
+        }
+    else:
+        context['has_assessments'] = False
+    
+    # Get next confirmed appointment
+    next_appointment = Appointment.objects.filter(
+        patient=request.user.patient_profile,
+        status='Confirmed',
+        appointment_date__gte=now().date()
+    ).order_by('appointment_date', 'appointment_time').first()
+
+    context.update({
+        'next_appointment': next_appointment,
+        'today': date.today(),
+    })
+    
+    return render(request, 'dashboard/patient/patient_dash.html', context)
+
+@login_required
+def reschedule_appointment(request, appointment_id):
+    appointment = get_object_or_404(Appointment, 
+                                  id=appointment_id, 
+                                  patient=request.user.patient_profile)
+    
+    if request.method == 'POST':
+        try:
+            # Parse the date and time from the form
+            new_date = datetime.strptime(request.POST.get('date'), '%Y-%m-%d').date()
+            new_time = datetime.strptime(request.POST.get('time'), '%H:%M').time()
+            
+            # Check if the date is in the past
+            if new_date < date.today():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Cannot schedule appointments in the past'
+                }, status=400)
+            
+            # Check if the date is a weekend
+            if new_date.weekday() >= 5:  # 5 is Saturday, 6 is Sunday
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Doctor is not available on weekends'
+                }, status=400)
+            
+            # If it's today, check if the time has already passed
+            if new_date == date.today() and new_time < datetime.now().time():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Cannot schedule appointments in the past'
+                }, status=400)
+            
+            # Get doctor's availability
+            doctor_availability = DoctorAvailability.objects.get(doctor=appointment.doctor)
+            
+            # Check if the selected time is within doctor's visiting hours
+            if new_time < doctor_availability.visiting_hours_start or new_time > doctor_availability.visiting_hours_end:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Doctor is only available between {doctor_availability.visiting_hours_start.strftime("%I:%M %p")} '
+                              f'and {doctor_availability.visiting_hours_end.strftime("%I:%M %p")}'
+                }, status=400)
+            
+            # Check if doctor has any other appointments at the same time
+            conflicting_appointment = Appointment.objects.filter(
+                ~Q(id=appointment_id),  # Exclude current appointment
+                doctor=appointment.doctor,
+                appointment_date=new_date,
+                appointment_time=new_time,
+                status='Confirmed'
+            ).exists()
+            
+            if conflicting_appointment:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'This time slot is already booked. Please choose another time.'
+                }, status=400)
+            
+            # Store old date/time for notification
+            old_date = appointment.appointment_date
+            old_time = appointment.appointment_time
+            
+            # Update appointment details
+            appointment.appointment_date = new_date
+            appointment.appointment_time = new_time
+            appointment.notes = request.POST.get('notes', '')
+            appointment.location = request.POST.get('location', '')
+            appointment.save()
+            
+            # Create notification for doctor
+            Notification.objects.create(
+                user=appointment.doctor.user,
+                message=f"Appointment with {request.user.get_full_name()} rescheduled from "
+                        f"{old_date.strftime('%B %d, %Y')} at {old_time.strftime('%I:%M %p')} to "
+                        f"{new_date.strftime('%B %d, %Y')} at {new_time.strftime('%I:%M %p')}"
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Appointment rescheduled successfully',
+                'new_date': new_date.strftime('%B %d, %Y'),
+                'new_time': new_time.strftime('%I:%M %p')
+            })
+        except DoctorAvailability.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': "Doctor's availability information not found"
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+    
+    # For GET request, return doctor's availability along with appointment details
+    try:
+        doctor_availability = DoctorAvailability.objects.get(doctor=appointment.doctor)
+        return JsonResponse({
+            'appointment': {
+                'id': appointment.id,
+                'date': appointment.appointment_date.strftime('%Y-%m-%d'),
+                'time': appointment.appointment_time.strftime('%H:%M'),
+                'notes': appointment.notes or '',
+                'location': appointment.location or '',
+                'doctor_name': appointment.doctor.user.get_full_name(),
+                'doctor_availability': {
+                    'start_time': doctor_availability.visiting_hours_start.strftime('%H:%M'),
+                    'end_time': doctor_availability.visiting_hours_end.strftime('%H:%M')
+                }
+            }
+        })
+    except DoctorAvailability.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': "Doctor's availability information not found"
+        }, status=400)
+
+@login_required
+@require_POST
+def cancel_appointment(request, appointment_id):
+    appointment = get_object_or_404(Appointment, 
+                                  id=appointment_id, 
+                                  patient=request.user.patient_profile)
+    
+    try:
+        appointment.status = 'Cancelled'
+        appointment.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Appointment cancelled successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)

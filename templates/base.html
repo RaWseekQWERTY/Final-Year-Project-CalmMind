@@ -80,9 +80,9 @@
           <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border rounded shadow-md z-50">
             <a href="#" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-500">View Profile</a>
             {% if role == "patient" %}
-              <a href="{% url 'patient_dashboard' %}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-500">Patient Dashboard</a>
+              <a href="{% url 'dashboard-patient' %}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-500">Patient Dashboard</a>
             {% elif role == "doctor" %}
-              <a href="{% url 'doctor_dashboard' %}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-500">Doctor Dashboard</a>
+              <a href="{% url 'dashboard-doctor' %}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-500">Doctor Dashboard</a>
             {% elif role == "admin" %}
               <a href="{% url 'admin_dashboard' %}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-500">Admin Dashboard</a>
             {% endif %}

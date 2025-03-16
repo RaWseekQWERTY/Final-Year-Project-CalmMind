@@ -83,7 +83,8 @@ def register_view(request):
                 username=username,
                 first_name=first_name,
                 last_name=last_name,
-                email=email
+                email=email,
+                role="patient"
             )
             if role == "admin":
                 user.is_staff = True
@@ -118,7 +119,7 @@ def login_view(request):
                 # Redirect based on the 'next' parameter or user role
                 next_url = request.POST.get('next', '/')
                 if user.role == "patient":
-                    return redirect(next_url) if next_url else redirect("patient_dashboard")
+                    return redirect(next_url) if next_url else redirect("dashboard-patient")
                 elif user.role == "doctor":
                     return redirect(next_url) if next_url else redirect("dashboard-doctor")
                 elif user.role == "admin":

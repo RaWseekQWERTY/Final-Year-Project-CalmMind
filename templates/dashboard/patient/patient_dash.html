@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container mx-auto px-4 py-6 space-y-6">
+    <!-- Welcome Section -->
+    <section class="bg-gradient-to-r from-green-500 to-green-800 rounded-xl p-6 text-white">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-semibold">Welcome back, {{ request.user.get_full_name }}!</h2>
+                <p class="text-teal-50 mt-1">How are you feeling today?</p>
+            </div>
+            <a href="{% url 'assessment' %}" 
+               class="inline-flex bg-white text-green-600 px-6 py-3 rounded-lg font-semibold 
+                      transform hover:bg-green-50 transition-all duration-300 shadow-md">
+                Take a New PHQ-9 Assessment
+            </a>
+        </div>
+    </section>
+
+    {% if has_assessments %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- PHQ-9 Assessment History -->
+        <div class="bg-white rounded-xl shadow-lg lg:col-span-2">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold">PHQ-9 Assessment History</h2>
+                <p class="text-gray-500 text-sm">Track your depression symptoms over time</p>
+            </div>
+            <div class="p-6">
+                <div class="h-[300px]">
+                    {{ graph|safe }}
+                </div>
+
+                <div class="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-slate-50 rounded-lg">
+                    <div>
+                        <p class="text-sm text-slate-500">Latest Assessment</p>
+                        <p class="font-medium">{{ latest_date }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500">Score</p>
+                        <p class="font-medium">{{ latest_score }}/27</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500">Depression Level</p>
+                        <p class="font-medium">{{ latest_level }}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-green-500 mt-1"></div>
+                            <p class="text-xs text-slate-500">0-4: Minimal</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-blue-500 mt-1"></div>
+                            <p class="text-xs text-slate-500">5-9: Mild</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-yellow-500 mt-1"></div>
+                            <p class="text-xs text-slate-500">10-14: Moderate</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500 mt-1"></div>
+                            <p class="text-xs text-slate-500">15+: Severe</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Appointment Card -->
+        <div class="bg-white rounded-xl shadow-lg">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold">Upcoming Appointment</h2>
+                <p class="text-gray-500 text-sm">Your next scheduled session</p>
+            </div>
+            <div class="p-6">
+                {% if next_appointment %}
+                <div class="p-4 border border-teal-100 bg-teal-50 rounded-lg">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-white p-2 rounded-lg">
+                            <svg class="h-6 w-6 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-medium text-slate-800">
+                                {{ next_appointment.appointment_date|date:"l, F j" }}
+                            </p>
+                            <p class="text-slate-500">
+                                {{ next_appointment.appointment_time|time:"g:i A" }}
+                            </p>
+                            <div class="my-2 border-t border-teal-200"></div>
+                            <p class="font-medium text-slate-800">
+                                Dr. {{ next_appointment.doctor.user.get_full_name }}
+                            </p>
+                            <p class="text-slate-500">
+                                {{ next_appointment.doctor.specialization }}
+                            </p>
+                            <div class="mt-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Confirmed
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button onclick="openRescheduleModal('{{ next_appointment.id }}')" 
+                            class="inline-flex items-center px-4 py-2 border border-teal-300 rounded-md text-sm font-medium text-teal-700 bg-white hover:bg-teal-50">
+                        Reschedule
+                    </button>
+                    <button onclick="openCancelModal('{{ next_appointment.id }}')"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50">
+                        Cancel
+                    </button>
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <p class="text-gray-500">No upcoming appointments</p>
+                    <a href="{% url 'doctor_list' %}" 
+                       class="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                        Book Appointment
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- No Assessments View -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="text-center py-8">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No assessments yet</h3>
+            <p class="mt-1 text-sm text-gray-500">Take your first PHQ-9 assessment to start tracking your mental health.</p>
+            <div class="mt-6">
+                <a href="{% url 'assessment' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                    Take Assessment Now
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</main>
+
+<!-- Reschedule Modal -->
+<div id="rescheduleModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Reschedule Appointment</h3>
+            <form id="rescheduleForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="date" name="date" required
+                           min="{{ today|date:'Y-m-d' }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                    <p class="mt-1 text-sm text-gray-500">Note: Doctor is not available on weekends</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Time</label>
+                    <input type="time" name="time" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                    <p class="mt-1 text-sm text-gray-500" id="availabilityText"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Location</label>
+                    <input type="text" name="location"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="notes" rows="3"
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 mt-4">
+                    <button type="button" onclick="closeRescheduleModal()"
+                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">
+                        Reschedule
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div id="cancelModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg font-medium leading-6 text-gray-900">Cancel Appointment</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">
+                    Are you sure you want to cancel this appointment? This action cannot be undone.
+                </p>
+            </div>
+            <div class="flex justify-center gap-3 mt-4">
+                <button onclick="closeCancelModal()"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                    No, Keep it
+                </button>
+                <button onclick="confirmCancelAppointment()"
+                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                    Yes, Cancel it
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to handle the modals -->
+<script>
+let currentAppointmentId = null;
+
+function openRescheduleModal(appointmentId) {
+    currentAppointmentId = appointmentId;
+    
+    // Fetch current appointment details
+    fetch(`/reschedule-appointment/${appointmentId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('input[name="date"]').value = data.appointment.date;
+            document.querySelector('input[name="time"]').value = data.appointment.time;
+            document.querySelector('input[name="location"]').value = data.appointment.location;
+            document.querySelector('textarea[name="notes"]').value = data.appointment.notes;
+            
+            // Show doctor's availability
+            const availabilityText = document.getElementById('availabilityText');
+            if (data.appointment.doctor_availability) {
+                availabilityText.textContent = `Doctor's available hours: ${data.appointment.doctor_availability.start_time} - ${data.appointment.doctor_availability.end_time}`;
+            }
+        });
+    
+    document.getElementById('rescheduleModal').classList.remove('hidden');
+}
+
+function closeRescheduleModal() {
+    document.getElementById('rescheduleModal').classList.add('hidden');
+}
+
+function openCancelModal(appointmentId) {
+    currentAppointmentId = appointmentId;
+    document.getElementById('cancelModal').classList.remove('hidden');
+}
+
+function closeCancelModal() {
+    document.getElementById('cancelModal').classList.add('hidden');
+}
+
+// Update form submission to handle errors
+document.getElementById('rescheduleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(`/reschedule-appointment/${currentAppointmentId}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            closeRescheduleModal();
+            // Show success message
+            alert('Appointment rescheduled successfully');
+            window.location.reload();
+        } else {
+            // Show error message
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        alert('An error occurred while rescheduling the appointment');
+    });
+});
+
+function confirmCancelAppointment() {
+    fetch(`/cancel-appointment/${currentAppointmentId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            closeCancelModal();
+            window.location.reload(); // Refresh to show updated status
+        } else {
+            alert(data.message);
+        }
+    });
+}
+
+document.querySelector('input[name="date"]').addEventListener('change', function(e) {
+    const selectedDate = new Date(this.value);
+    const dayOfWeek = selectedDate.getDay();
+    
+    // Check if selected day is a weekend (0 is Sunday, 6 is Saturday)
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        alert('Doctor is not available on weekends. Please select a weekday.');
+        this.value = ''; // Clear the invalid date
+    }
+});
+</script>
+{% endblock %}
