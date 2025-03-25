@@ -204,5 +204,7 @@ LOGIN_URL = 'login'
 ML_MODELS_PATH = os.path.join(BASE_DIR, 'ml_models')
 PHQ9_MODEL_PATH = os.path.join(ML_MODELS_PATH, 'multi_output_phq9_model.pkl')
 # Path to fine-tuned model
+#Create tinyllama locally by running huggingface-cli download TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T --local-dir ./tinyllama-base
 LLAMA_MODEL_PATH = os.path.join(BASE_DIR,'tinyllama-base')
+#LLAMA_MODEL_PATH = "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T"
 FINETUNED_PATH = os.path.join(BASE_DIR,'tinyllama-finetuned')
