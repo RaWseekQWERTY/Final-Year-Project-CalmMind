@@ -20,19 +20,19 @@
                 </a>
             </div>
             <nav class="space-y-2">
-                <a href="{% url 'dashboard-doctor' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'dashboard-doctor' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
+                <a href="{% url 'dashboard-doctor' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'dashboard-doctor' %}text-green-600 bg-green-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
                     <i class="fas fa-home"></i>
                     <span {% if request.resolver_match.url_name == 'dashboard-doctor' %}class="text-green-500"{% endif %}>Dashboard</span>
                 </a>
-                <a href="{% url 'doctor-appointments' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-appointments' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
+                <a href="{% url 'doctor-appointments' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-appointments' %}text-green-600 bg-green-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
                     <i class="fas fa-calendar-alt"></i>
                     <span {% if request.resolver_match.url_name == 'doctor-appointments' %}class="text-green-500"{% endif %}>Appointments</span>
                 </a>
-                <a href="{% url 'doctor-patients' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-patients' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
+                <a href="{% url 'doctor-patients' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-patients' %}text-green-600 bg-green-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
                     <i class="fas fa-user"></i>
                     <span {% if request.resolver_match.url_name == 'doctor-patients' %}class="text-green-500"{% endif %}>Patient</span>
                 </a>
-                <a href="{% url 'doctor-analytics' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-analytics' %}text-teal-600 bg-teal-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
+                <a href="{% url 'doctor-analytics' %}" class="flex items-center space-x-3 px-4 py-2 {% if request.resolver_match.url_name == 'doctor-analytics' %}text-green-600 bg-green-50{% else %}text-gray-600 hover:bg-gray-200{% endif %} rounded-lg">
                     <i class="fas fa-chart-line"></i>
                     <span {% if request.resolver_match.url_name == 'doctor-analytics' %}class="text-green-500"{% endif %}>Analytics</span>
                 </a>

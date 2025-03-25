@@ -40,6 +40,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -81,10 +83,22 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'calmmind.asgi.application'
 WSGI_APPLICATION = 'calmmind.wsgi.application'
 
 AUTH_USER_MODEL = 'auth_app.User'
 
+# Channel layers configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        # For production, consider using Redis:
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [('127.0.0.1', 6379)],
+        # },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -118,6 +132,36 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'chatbot': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -156,6 +200,9 @@ SESSION_SAVE_EVERY_REQUEST = True  # Reset the session timer on every request
 
 LOGIN_URL = 'login' 
 
-# Define the path to the ML model
+# path to the ML model
 ML_MODELS_PATH = os.path.join(BASE_DIR, 'ml_models')
 PHQ9_MODEL_PATH = os.path.join(ML_MODELS_PATH, 'multi_output_phq9_model.pkl')
+# Path to fine-tuned model
+LLAMA_MODEL_PATH = os.path.join(BASE_DIR,'tinyllama-base')
+FINETUNED_PATH = os.path.join(BASE_DIR,'tinyllama-finetuned')
