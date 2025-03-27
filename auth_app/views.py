@@ -5,6 +5,10 @@ from django.http import HttpResponseForbidden
 from .models import User,Patient,Doctor
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.conf import settings
+import random
+import string
 
 User = get_user_model()
 
@@ -194,3 +198,94 @@ def update_user_role_page(request, user_id):
 def logout_view(request):
     logout(request)
     return redirect("login")
+
+def generate_otp():
+    return ''.join(random.choices(string.digits, k=6))
+
+def forgot_password(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        try:
+            user = User.objects.get(email=email)
+            otp = generate_otp()
+            # Store OTP in session
+            request.session['reset_otp'] = otp
+            request.session['reset_email'] = email
+            
+            # Send email
+            send_mail(
+                'Password Reset OTP',
+                f'Your OTP for password reset is: {otp}',
+                settings.EMAIL_HOST_USER,
+                [email],
+                fail_silently=False,
+            )
+            
+            messages.success(request, "OTP has been sent to your email.")
+            return redirect('verify_otp')
+        except User.DoesNotExist:
+            messages.error(request, "No user found with this email address.")
+    
+    return render(request, "auth_app/forgot_password.html")
+
+def verify_otp(request):
+    # Check if user has a reset email in session
+    if 'reset_email' not in request.session:
+        messages.error(request, "Please start the password reset process from the beginning.")
+        return redirect('forgot_password')
+
+    if request.method == "POST":
+        entered_otp = request.POST.get("otp")
+        stored_otp = request.session.get('reset_otp')
+        
+        if entered_otp == stored_otp:
+            # Store a flag indicating OTP verification was successful
+            request.session['otp_verified'] = True
+            return redirect('reset_password')
+        else:
+            messages.error(request, "Invalid OTP")
+    
+    return render(request, "auth_app/verify_otp.html")
+
+def reset_password(request):
+    # Check if user has verified OTP
+    if not request.session.get('otp_verified'):
+        messages.error(request, "Please verify your OTP first.")
+        return redirect('forgot_password')
+
+    if request.method == "POST":
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm_password")
+        email = request.session.get('reset_email')
+        
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match")
+            return render(request, "auth_app/reset_password.html")
+        
+        # Password validation
+        if len(password) < 8:
+            messages.error(request, "Password must be at least 8 characters long")
+            return render(request, "auth_app/reset_password.html")
+        if not any(char.isdigit() for char in password):
+            messages.error(request, "Password must contain at least one number")
+            return render(request, "auth_app/reset_password.html")
+        if not any(char.isupper() for char in password):
+            messages.error(request, "Password must contain at least one uppercase letter")
+            return render(request, "auth_app/reset_password.html")
+        
+        try:
+            user = User.objects.get(email=email)
+            user.set_password(password)
+            user.save()
+            
+            # Clear all session variables
+            for key in ['reset_otp', 'reset_email', 'otp_verified']:
+                if key in request.session:
+                    del request.session[key]
+            
+            messages.success(request, "Password has been reset successfully")
+            return redirect('login')
+        except User.DoesNotExist:
+            messages.error(request, "User not found")
+    
+    return render(request, "auth_app/reset_password.html")

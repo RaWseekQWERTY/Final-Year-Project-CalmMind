@@ -208,3 +208,12 @@ PHQ9_MODEL_PATH = os.path.join(ML_MODELS_PATH, 'multi_output_phq9_model.pkl')
 LLAMA_MODEL_PATH = os.path.join(BASE_DIR,'tinyllama-base')
 #LLAMA_MODEL_PATH = "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T"
 FINETUNED_PATH = os.path.join(BASE_DIR,'tinyllama-finetuned')
+
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env('EMAIL')
+EMAIL_HOST_PASSWORD = env('EMAIL_PASS')
