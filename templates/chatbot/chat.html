@@ -7,40 +7,24 @@
     <div class="lg:col-span-2">
       <div class="border rounded-lg shadow-sm h-[600px] flex flex-col">
         <!-- Chat Messages -->
-        <div class="flex-1 p-4 overflow-y-auto">
+        <div id="chat-box" class="flex-1 p-4 overflow-y-auto">
           <!-- Assistant Message -->
           <div class="flex gap-3 mb-4">
-            <div class="w-8 h-8 rounded-full bg-teal-100 flex-shrink-0 flex items-center justify-center">
-              <div class="w-6 h-6 rounded-full bg-teal-500"></div>
+            <div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center">
+              <div class="w-6 h-6 rounded-full bg-green-500"></div>
             </div>
             <div>
               <div class="text-sm text-gray-500">CalmMind Assistant</div>
               <div class="text-sm">Hello! I'm your CalmMind assistant. How are you feeling today?</div>
             </div>
           </div>
-          
-          <!-- User Message -->
-          <div class="flex gap-3 mb-4 justify-end">
-            <div>
-              <div class="text-sm bg-blue-50 p-2 rounded-lg">I've been feeling a bit anxious lately</div>
-            </div>
-            <div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0"></div>
-          </div>
         </div>
         
-        <!-- Quick Replies and Input -->
+        <!-- Input Area -->
         <div class="p-4 border-t">
-          <!-- Quick Reply Buttons -->
-          <div class="flex flex-wrap gap-2 mb-4">
-            <button class="bg-white text-gray-700 border border-gray-300 rounded-full px-4 py-1 text-sm hover:bg-gray-50">Book an appointment at 3pm on balkot cafe</button>
-            <button class="bg-white text-gray-700 border border-gray-300 rounded-full px-4 py-1 text-sm hover:bg-gray-50">Feeling depressed</button>
-            <button class="bg-white text-gray-700 border border-gray-300 rounded-full px-4 py-1 text-sm hover:bg-gray-50">Sleep problems</button>
-          </div>
-          
-          <!-- Input Area -->
           <div class="flex gap-2">
-            <input type="text" placeholder="Type your message..." class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-            <button class="bg-teal-600 hover:bg-teal-700 text-white rounded-md px-3 py-2">
+            <input id="user-input" type="text" placeholder="Type your message..." class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+            <button id="send-btn" class="bg-green-600 hover:bg-green-700 text-white rounded-md px-3 py-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
               </svg>
@@ -60,4 +44,82 @@
       </div>
     </div>
   </div>
+
+  <script>
+    // Establish WebSocket connection for the appointment chatbot
+    const chatSocket = new WebSocket(
+      'ws://' + window.location.host + '/ws/appointment_chatbot/'
+    );
+  
+    // DOM elements
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-btn');
+  
+    // Handle incoming messages from the server
+    chatSocket.onmessage = function(e) {
+      const data = JSON.parse(e.data);
+      const message = data.message;
+  
+      // Append bot response to chat box
+      const botMessageDiv = document.createElement('div');
+      botMessageDiv.className = 'flex gap-3 mb-4';
+      botMessageDiv.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center">
+          <div class="w-6 h-6 rounded-full bg-green-500"></div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">CalmMind Assistant</div>
+          <div class="text-sm">${message}</div>
+        </div>
+      `;
+      chatBox.appendChild(botMessageDiv);
+  
+      // Scroll to bottom of chat box
+      chatBox.scrollTop = chatBox.scrollHeight;
+    };
+  
+    // Handle errors
+    chatSocket.onerror = function(err) {
+      console.error('WebSocket error:', err);
+    };
+  
+    // Send message to server
+    function sendMessage() {
+      const message = userInput.value.trim();
+      if (message) {
+        // Append user message to chat box
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'flex gap-3 mb-4 justify-end';
+        userMessageDiv.innerHTML = `
+          <div>
+            <div class="text-sm bg-blue-50 p-2 rounded-lg">${message}</div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0"></div>
+        `;
+        chatBox.appendChild(userMessageDiv);
+  
+        // Send message via WebSocket
+        chatSocket.send(JSON.stringify({
+          'message': message
+        }));
+  
+        // Clear input field
+        userInput.value = '';
+  
+        // Scroll to bottom of chat box
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    }
+  
+    // Bind send button click event
+    sendButton.onclick = sendMessage;
+  
+    // Allow pressing Enter key to send message
+    userInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+  </script>
 {% endblock %}

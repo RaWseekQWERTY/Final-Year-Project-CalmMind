@@ -1,0 +1,290 @@
+{
+    "intents": [
+      {
+        "tag": "greeting",
+        "patterns": [
+          "Hi",
+          "Hello",
+          "Good morning",
+          "Good afternoon",
+          "Good evening",
+          "Hey",
+          "Hey there",
+          "Hello CalmMind",
+          "Hi CalmMind",
+          "Greetings",
+          "Good day",
+          "Howdy",
+          "What's up?",
+          "Yo",
+          "Hey, how's it going?"
+        ],
+        "responses": [
+          "Hello! How can I assist you today?",
+          "Hi there! How are you feeling today?",
+          "Greetings! I'm here to help. What's on your mind?",
+          "Hello! Welcome to CalmMind. How can I be of service?",
+          "Hi! I hope you're having a good day. How can I help?",
+          "Good day! What can I do for you?",
+          "Hey, how can I help you today?",
+          "Greetings! Let me know how I can assist you.",
+          "Hello! Welcome to CalmMind."
+        ]
+      },
+      {
+        "tag": "mental_health_queries",
+        "patterns": [
+          "I feel anxious",
+          "I'm stressed out",
+          "I'm feeling down",
+          "I'm experiencing anxiety",
+          "I'm dealing with stress",
+          "I'm feeling depressed",
+          "Help me calm down",
+          "How to reduce anxiety?",
+          "Tips for managing stress",
+          "What are some mindfulness exercises?",
+          "I'm having a panic attack",
+          "I feel overwhelmed",
+          "I need help with my mental health",
+          "I'm having trouble sleeping",
+          "I'm feeling isolated",
+          "I'm worried about my mental health",
+          "I'm feeling hopeless",
+          "How can I improve my mood?",
+          "I need coping strategies",
+          "I'm struggling with negative thoughts"
+        ],
+        "responses": [
+          "I understand you're feeling anxious. Let's try some deep breathing exercises together. Breathe in deeply for four seconds, hold for four seconds, and exhale slowly for six seconds.",
+          "It sounds like you're under a lot of stress. Try taking a short break and doing something you enjoy. Maybe listening to music or going for a walk.",
+          "I'm sorry you're feeling down. Remember that you're not alone, and things will get better. Would you like to explore some coping mechanisms or resources?",
+          "I hear you. Dealing with anxiety can be tough. Perhaps practicing mindfulness or meditation can help. Would you like some guided exercises?",
+          "Stress can be really draining. Let's explore some stress-reduction techniques like progressive muscle relaxation. Are you open to trying that?",
+          "I understand. Feeling overwhelmed is a common experience. Let’s break down what's causing your anxiety into smaller, manageable steps. What feels like the biggest challenge right now?",
+          "It's important to acknowledge how you're feeling. I'm here to listen and provide support. Would you like to explore some grounding techniques?",
+          "It sounds like you're having trouble sleeping. Try establishing a relaxing bedtime routine and avoiding screen time before bed.",
+          "Feeling isolated can be tough. Connecting with friends or family, or joining a support group can help.",
+          "I'm sorry to hear you're feeling hopeless. It's important to remember that things can change, and help is available. Would you like some resources?",
+          "Negative thoughts can be challenging. Cognitive behavioral therapy (CBT) techniques can help you identify and challenge them. Would you like to learn more?"
+        ]
+      },
+      {
+        "tag": "appointment_booking",
+        "patterns": [
+          "Book an appointment",
+          "I want to book an appointment",
+          "Can I schedule a therapy session?",
+          "I need to see a therapist",
+          "Schedule an appointment for me",
+          "I'd like to make an appointment",
+          "Set up a therapy session",
+          "Book a consultation",
+          "Schedule a meeting with a therapist",
+          "Can I book a session?",
+          "I want to talk to someone",
+          "I need to schedule a consultation",
+          "Get me a therapy appointment",
+          "Arrange a therapy session"
+        ],
+        "responses": [
+          "Sure, let's book an appointment. Could you please provide your full name?",
+          "Okay, I can help with that. First, could you please tell me your name?",
+          "Great! I can assist you with booking an appointment. What is your name?",
+          "Alright, let's get you scheduled. What name should I use for the appointment?",
+          "No problem, I can arrange a therapy session for you. Please provide your name to begin.",
+          "I can help with that. What is your name, please?",
+          "Certainly, let's schedule a session. What name should I use?"
+        ]
+      },
+      {
+        "tag": "get_name",
+        "patterns": ["My name is John", "I am Sara Wilson", "It's John Doe","Rasik","Progress","Alish","Rasik Kayastha","John Doe","Sara Wilson"],
+        "responses": [
+          "Thank you, [user_name]. And what date would you like to book your appointment for? (Please provide in MM/DD/YYYY format).",
+          "Got it, [user_name]. What date are you looking to book your session on? (MM/DD/YYYY)",
+          "Understood, [user_name]. And what date works best for you? (Please provide date in MM/DD/YYYY format)",
+          "Okay, [user_name]. Now, what date would you prefer to schedule your appointment for? (MM/DD/YYYY)",
+          "Thanks, [user_name]. And what date are you hoping to come in? (MM/DD/YYYY)",
+          "Perfect, [user_name]. What's the date you are hoping to come?",
+          "Thank you, [user_name]. Please provide the date that you wish to schedule the session for."
+        ]
+      },
+      {
+        "tag": "get_date",
+        "patterns": ["I want it on 2025-05-24", "How about December 1st?", "December 1","2025-05-22","July 1","April 12","May 2nd","May 2","2025-04-10","2025-04-11","2025-04-12","2025-04-13","2025-04-14","2025-04-15","2025-04-16","2025-04-17","2025-04-18","2025-04-19","2025-04-20","2025-04-21","2025-04-22","2025-04-23","2025-04-24","2025-04-25","2025-04-26","2025-05-01","2025-05-02","2025-05-03","2025-05-04","2025-05-06","2025-05-07","2025-05-08","2025-05-09","2025-05-10","2025-05-11","2025-05-12","2025-05-13"],
+        "responses": [
+          "Okay, for [appointment_date], and what time would you like to book your appointment?",
+          "Thank you, [appointment_date]. And what time works best for you on that day?",
+          "Alright, for [appointment_date]. And what time are you looking at?",
+          "Great, [appointment_date]. And what time would you prefer to schedule the session?",
+          "Okay, for [appointment_date]. And what time do you prefer?",
+          "Perfect, [appointment_date]. Please provide your ideal time.",
+          "Okay, and what is the time you would like on [appointment_date]?"
+        ]
+      },
+       {
+        "tag": "get_time",
+        "patterns": ["3 PM","At 14:00", "In the afternoon", "1:00","3:00","2:00","16:00","15:00","At 2 PM"],
+        "responses": [
+          "And finally, do you have a preferred doctor, or would you like me to select one based on their availability? Please respond with a Doctor's Name or 'Any'",
+          "Perfect! So the appointment time is [appointment_time]. Do you have a preferred Doctor or would you like me to pick one at random?",
+          "Great, [appointment_time]. And Do you have a preferred Doctor, or do you need a suggestion?",
+          "Okay, [appointment_time]. And Do you have a preferred Doctor, or would you like to look at a list?",
+          "Perfect! So, [appointment_time]. Who would you like to see, or would you like me to pick at random?",
+          "Okay, [appointment_time]. Please tell me your doctor, or I can pick one."
+        ]
+      },
+      {
+        "tag": "available_doctors",
+        "patterns": [
+          "Who are the available doctors?",
+          "List all doctors",
+          "Show me the doctors",
+          "Tell me about your therapists",
+          "Which doctors are available?",
+          "Can you show me a list of doctors?",
+          "Who can I see?",
+          "Show available therapists",
+          "Who are your specialists?",
+          "Tell me about the therapists available",
+          "Can you provide the list of available specialists?",
+          "Are there any psychologists available right now?",
+          "List doctors who treat anxiety",
+          "Show me therapists that specialize in depression"
+        ],
+        "responses": [
+          "Here is a list of our available doctors:",
+          "Here's the list of therapists currently available:",
+          "Please see the list of available doctors below:",
+          "Our available therapists are:",
+          "Here are the doctors available to book an appointment with:",
+          "I can help with that, let me pull up the availabe therapists",
+          "Of course, let me find a list of them."
+        ]
+      },
+      {
+        "tag": "faq",
+        "patterns": [
+          "What is CalmMind?",
+          "How does CalmMind work?",
+          "What services do you offer?",
+          "Is my information confidential?",
+          "How much does a session cost?",
+          "What are your office hours?",
+          "Do you offer online therapy?",
+          "Can I cancel my appointment?",
+          "How do I reschedule my appointment?",
+          "How do I contact customer support?",
+          "What are the qualifications of your therapists?",
+          "Do you accept insurance?",
+          "What types of therapy do you offer?",
+          "How long are the therapy sessions?",
+          "Can I choose my therapist?",
+          "What happens during the first session?",
+          "Are there any age restrictions?",
+          "Do you offer group therapy?",
+          "How often should I attend therapy?",
+          "Can I switch therapists?"
+        ],
+        "responses": [
+          "CalmMind is a mental health support chatbot designed to provide resources, assistance, and connect you with therapists.",
+          "CalmMind helps you find resources, schedule appointments with therapists, and get answers to frequently asked questions.",
+          "We offer therapy session bookings, information on mental health topics, and helpful resources.",
+          "Your information is kept strictly confidential and protected by our privacy policy.",
+          "Session costs vary depending on the therapist. Please check the doctor's profile for detailed fee information.",
+          "Our therapists offer flexible scheduling. Please view their availability to see days/times.",
+          "We offer both in-person and online therapy sessions. Choose the option that works best for you when booking.",
+          "You can cancel your appointment up to 24 hours in advance.",
+          "You can reschedule your appointment through your account settings or by contacting customer support.",
+          "You can contact customer support via email at support@calmmind.com or call us at 555-123-4567.",
+          "Our therapists are licensed professionals with extensive experience in various fields of mental health.",
+          "Please contact the doctor directly to ask about insurance.",
+          "We offer a variety of therapies like CBT and DBT.",
+          "Session length varies with the therapist and session.",
+          "Yes you can always select the therapist that you like.",
+          "The first session will be an overview and getting to know you."
+        ]
+      },
+          {
+        "tag": "goodbye",
+        "patterns": [
+          "Bye",
+          "Goodbye",
+          "See you later",
+          "Talk to you later",
+          "I'm leaving",
+          "Have a good day",
+          "Have a great day",
+          "See ya",
+          "Farewell",
+          "Okay bye",
+          "I'm done",
+          "Thanks, bye"
+        ],
+        "responses": [
+          "Goodbye! Take care of yourself.",
+          "Bye! Hope to see you again soon.",
+          "See you later! Feel free to reach out again if you need anything.",
+          "Have a good day! Stay well.",
+          "Goodbye! Wishing you all the best.",
+          "Talk to you later! Take care.",
+          "Farewell! Come back anytime."
+        ]
+      },
+      {
+        "tag": "thank_you",
+        "patterns": [
+          "Thank you",
+          "Thanks",
+          "Thank you so much",
+          "I appreciate it",
+          "Thanks a lot",
+          "I'm grateful",
+          "That's very helpful",
+          "You're helpful",
+          "Thank you for your help",
+          "This is great",
+          "That's perfect",
+          "You're awesome"
+        ],
+        "responses": [
+          "You're welcome!",
+          "No problem! I'm glad I could help.",
+          "Anytime! Feel free to ask if you have more questions.",
+          "I'm happy to assist you!",
+          "You're very welcome!",
+          "It's my pleasure to help you.",
+          "Glad I could be of service!"
+        ]
+      },
+      {
+        "tag": "fallback",
+        "patterns": [
+          "Unrecognized input",
+          "What?",
+          "Huh?",
+          "I don't understand",
+          "Can you repeat that?",
+          "Sorry, I didn't get that",
+          "I'm confused",
+          "Please explain",
+          "What do you mean?",
+          "Say that again",
+          "I don't know what you mean",
+          "Can you say it differently?",
+          "I am unsure",
+          "Sorry I didn't get that."
+        ],
+        "responses": [
+          "I'm sorry, I didn't understand that. Could you please rephrase your question?",
+          "Could you please clarify what you're asking?",
+          "I'm having trouble understanding. Can you try asking in a different way?",
+          "I apologize, I didn't catch that. Could you please say it again?",
+          "I'm not sure I understand. Can you provide more information?",
+          "I'm still learning. Could you please try rephrasing?",
+          "Sorry, I don't know what you mean. Can you explain differently?"
+        ]
+      }
+    ]
+  }
