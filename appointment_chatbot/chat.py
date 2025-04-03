@@ -233,15 +233,13 @@ def list_available_doctors():
         return "No doctors are currently available."
     
 async def save_appointment(context, user_id):
-    print(f"Saving appointment with context: {context} and user_id: {user_id}")  # Debug log
+    print(f"Saving appointment with context: {context} and user_id: {user_id}")
 
     try:
-        # Check if all required fields are present
         if not all(key in context for key in ["name", "date", "time"]):
             missing_fields = [key for key in ["name", "date", "time"] if key not in context]
             return f"Missing required information: {', '.join(missing_fields)}. Please provide this information."
             
-        # Extract and parse date/time
         parsed_date = dateparser.parse(context["date"])
         parsed_time = dateparser.parse(context["time"])
         
@@ -250,88 +248,72 @@ async def save_appointment(context, user_id):
         
         appointment_date = parsed_date.date()
         appointment_time = parsed_time.time()
-        
-        # Get current date and time
         current_datetime = datetime.now()
-        
-        # Combine appointment date and time for comparison
         appointment_datetime = datetime.combine(appointment_date, appointment_time)
         
-        # Check if the appointment is in the past
         if appointment_datetime < current_datetime:
             return "Sorry, you cannot book appointments for past dates and times. Please select a future date and time."
 
         try:
-            # Fetch the logged-in user's Patient profile using sync_to_async
-            user = await sync_to_async(User.objects.get)(id=user_id)
-            
-            # Get the patient profile, with better error handling
+            user = await sync_to_async(User.objects.get, thread_sensitive=True)(id=user_id)
+
             try:
-                patient = await sync_to_async(lambda: user.patient_profile)()
+                patient = await sync_to_async(lambda: user.patient_profile, thread_sensitive=True)()
             except AttributeError:
                 return "Error: No patient profile found for your account."
 
-            # Fetch the first doctor
-            doctor = await sync_to_async(Doctor.objects.first)()
+            doctor = await sync_to_async(Doctor.objects.first, thread_sensitive=True)()
             if not doctor:
                 return "Error: No doctors available in the system."
-                
-            # Check if the appointment is on a weekend
-            if appointment_date.weekday() in [5, 6]:  # 5 = Saturday, 6 = Sunday
+
+            if appointment_date.weekday() in [5, 6]:
                 return "Sorry, appointments are not available on weekends. Please select a weekday."
-                
-            # Check if the doctor has availability for the selected date and time
-            
-            # Get the doctor's availability for the selected day
+
             availability = await sync_to_async(lambda: DoctorAvailability.objects.filter(
                 doctor=doctor,
-                day_of_week=appointment_date.weekday()
-            ).first())()
-            
+            ).first(), thread_sensitive=True)()
+
             if not availability:
                 return f"Sorry, the doctor is not available on {appointment_date.strftime('%A')}s. Please select another day."
-                
-            # Check if the appointment time is within visiting hours
+
             if not (availability.visiting_hours_start <= appointment_time <= availability.visiting_hours_end):
                 return f"Sorry, the doctor is only available between {availability.visiting_hours_start.strftime('%H:%M')} and {availability.visiting_hours_end.strftime('%H:%M')} on {appointment_date.strftime('%A')}s. Please select a time within these hours."
-                
-            # Check if the doctor is already booked for the selected date and time
+
             existing_appointment = await sync_to_async(lambda: Appointment.objects.filter(
                 doctor=doctor,
                 appointment_date=appointment_date,
                 appointment_time=appointment_time
-            ).exists())()
-            
+            ).exists(), thread_sensitive=True)()
+
             if existing_appointment:
                 return "Sorry, the selected time slot is already booked. Please select another time."
 
-            # All validations passed, create the appointment
-            appointment = await sync_to_async(Appointment.objects.create)(
+            appointment = await sync_to_async(Appointment.objects.create, thread_sensitive=True)(
                 patient=patient,
                 doctor=doctor,
                 appointment_date=appointment_date,
                 appointment_time=appointment_time,
+                location="Hospital",
+                notes="Booked Through Chat",
                 status="Pending"
             )
 
-            # Create notification for the doctor
-            
-            notification_message = f"New appointment request from {user.get_full_name()} for {appointment_date.strftime('%Y-%m-%d')} at {appointment_time.strftime('%H:%M')}."
-            
-            await sync_to_async(Notification.objects.create)(
-                user=doctor.user,
+            notification_message = f"New appointment request from {context['name']} for {appointment_date.strftime('%Y-%m-%d')} at {appointment_time.strftime('%H:%M')}."
+
+            doctor_user = await sync_to_async(lambda: doctor.user, thread_sensitive=True)()
+            await sync_to_async(Notification.objects.create, thread_sensitive=True)(
+                user=doctor_user,
                 message=notification_message
             )
-            
-            print(f"Notification created for doctor: {doctor.user.username}")
 
-            # Return success message
-            return f"Your appointment has been successfully booked with Dr. {doctor.user.last_name} for {appointment_date.strftime('%A, %B %d, %Y')} at {appointment_time.strftime('%I:%M %p')}. The doctor has been notified."
+            doctor_last_name = await sync_to_async(lambda: doctor.user.last_name, thread_sensitive=True)()
+
+            return f"Your appointment has been successfully booked with Dr. {doctor_last_name} for {appointment_date.strftime('%A, %B %d, %Y')} at {appointment_time.strftime('%I:%M %p')}. The doctor has been notified. Please wait for Conformation"
         
         except Exception as e:
             print(f"Database error: {str(e)}")
             return f"Database error: {str(e)}"
-            
+
     except Exception as e:
         print(f"Error saving appointment: {e}")
         return f"Sorry, there was an error booking your appointment: {str(e)}"
