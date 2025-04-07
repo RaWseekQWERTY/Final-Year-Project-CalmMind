@@ -26,8 +26,8 @@ def register_view(request):
         return redirect('/')  # Redirect to the homepage or another page
     if request.method == "POST":
         username = request.POST.get("username")
-        first_name = request.POST.get("first_name") 
-        last_name = request.POST.get("last_name")
+        first_name = request.POST.get("first_name").capitalize() 
+        last_name = request.POST.get("last_name").capitalize()
         email = request.POST.get("email")
         gender = "male"
         password = request.POST.get("password")
