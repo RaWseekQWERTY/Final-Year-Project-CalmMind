@@ -1,0 +1,470 @@
+{% extends 'base.html' %}
+{% block part%} Profile {%endblock%}
+
+{% block extra_head %}
+<script>
+    // Define the functions globally
+    window.toggleModal = function(modalId, show) {
+        const modal = document.getElementById(modalId);
+        if (show) {
+            modal.classList.remove('hidden');
+        } else {
+            modal.classList.add('hidden');
+        }
+    };
+
+    window.previewImage = function() {
+        const fileInput = document.getElementById('profileImage');
+        const preview = document.getElementById('profilePreview');
+        
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+            }
+            
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+    };
+
+    // Add event listeners when the document is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click event listeners to all close buttons
+        const closeButtons = document.querySelectorAll('[data-modal-close]');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const modalId = this.getAttribute('data-modal-target');
+                toggleModal(modalId, false);
+            });
+        });
+
+        // Add click event listeners to all show buttons
+        const showButtons = document.querySelectorAll('[data-modal-show]');
+        showButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const modalId = this.getAttribute('data-modal-target');
+                toggleModal(modalId, true);
+            });
+        });
+    });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    const table = $('#appointmentsTable').DataTable({
+      ajax: {
+        url: "{% url 'patient_appointments' %}",
+        dataSrc: ''
+      },
+      columns: [
+        { 
+          data: 'appointment_date',
+          render: function(data) {
+            return new Date(data).toLocaleDateString();
+          }
+        },
+        { 
+          data: 'appointment_time',
+          render: function(data) {
+            return data.slice(0, 5); // Show only HH:MM
+          }
+        },
+        { 
+          data: 'doctor_name'
+        },
+        { 
+          data: 'status',
+          render: function(data) {
+            const colors = {
+              'Pending': 'bg-yellow-100 text-yellow-700',
+              'Confirmed': 'bg-green-100 text-green-700',
+              'Cancelled': 'bg-red-100 text-red-700'
+            };
+            return `<span class="px-2 py-1 rounded-full ${colors[data]}">${data}</span>`;
+          }
+        },
+        { data: 'location' },
+        {
+          data: 'id',
+          render: function(data, type, row) {
+            return `
+              <button 
+                onclick="window.location.href='{% url 'patient_profile' %}appointment-pdf/${data}/'"
+                class="text-green-600 hover:text-green-700"
+              >
+                Download PDF
+              </button>
+            `;
+          }
+        }
+      ],
+      order: [[0, 'desc'], [1, 'desc']]
+    });
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const status = this.dataset.status;
+        
+        // Update active state
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.classList.remove('active', 'bg-opacity-100');
+          btn.classList.add('bg-opacity-50');
+        });
+        this.classList.add('active', 'bg-opacity-100');
+        this.classList.remove('bg-opacity-50');
+
+        // Apply filter
+        if (status === 'all') {
+          table.column(3).search('').draw();
+        } else {
+          table.column(3).search(status).draw();
+        }
+      });
+    });
+  });
+
+  function downloadPDF(appointmentId) {
+    window.location.href = `{% url 'patient_profile' %}appointment-pdf/${appointmentId}/`;
+  }
+
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 p-4">
+  {% if messages %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Header -->
+  <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <div class="flex items-center gap-4">
+      <div class="w-16 h-16 rounded-full bg-green-100 overflow-hidden">
+        {% if patient.featured_image %}
+          <img src="{{ patient.featured_image.url }}" alt="Profile image" class="w-full h-full object-cover">
+        {% endif %}
+      </div>
+      <div>
+        <h1 class="text-xl font-semibold">Welcome back, {{ patient.user.first_name }}!</h1>
+        {% if next_appointment %}
+          <p class="text-gray-600">Your next appointment is on {{ next_appointment.appointment_date|date:"F j, Y" }}</p>
+        {% else %}
+          <p class="text-gray-600">You have no upcoming appointments</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Personal Information -->
+    <div class="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-lg font-semibold">Personal Information</h2>
+        <button 
+          data-modal-show 
+          data-modal-target="patientEditModal"
+          class="text-green-600 hover:text-green-700 flex items-center gap-1"
+        >
+          <span>Edit</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <p class="text-gray-600 mb-1">Full Name</p>
+          <p class="font-medium">{{ patient.user.get_full_name }}</p>
+        </div>
+        <div>
+          <p class="text-gray-600 mb-1">Email</p>
+          <p class="font-medium">{{ patient.user.email }}</p>
+        </div>
+        <div>
+          <p class="text-gray-600 mb-1">Phone</p>
+          <p class="font-medium">{{ patient.contact_number|default:"Not provided" }}</p>
+        </div>
+        <div>
+          <p class="text-gray-600 mb-1">Address</p>
+          <p class="font-medium">{{ patient.address|default:"Not provided" }}</p>
+        </div>
+        <div>
+          <p class="text-gray-600 mb-1">Gender</p>
+          <p class="font-medium">{{ patient.user.get_gender_display }}</p>
+        </div>
+      </div>
+    </div>
+
+      <!-- Settings -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-semibold mb-4">Settings</h2>
+        <div class="space-y-4">
+          <button onclick="window.toggleModal('patientPasswordModal', true)" class="w-full text-left py-2 px-4 hover:bg-gray-50 rounded-lg flex justify-between items-center">
+            <span>Change Password</span>
+            <span class="text-gray-400">→</span>
+          </button>
+          <button onclick="window.toggleModal('patientDeleteModal', true)" class="w-full text-left py-2 px-4 hover:bg-gray-50 rounded-lg flex justify-between items-center">
+            <span>Delete Account</span>
+            <span class="text-gray-400">→</span>
+          </button>
+        </div>
+      </div>
+
+
+    <!-- Health Journey -->
+    <div class="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
+      <h2 class="text-lg font-semibold mb-6">Health Journey</h2>
+      <div class="flex gap-6">
+        <div class="flex-1">
+          <p class="text-gray-600 mb-2"> Recent PHQ-9 Score</p>
+          <div class="flex items-end gap-2">
+            <span class="text-3xl font-bold">{{ latest_score|default:"N/A" }}</span>
+            {% if improvement %}
+              <span class="{% if improvement > 0 %}text-green-600{% else %}text-red-600{% endif %} text-sm">
+                {% if improvement > 0 %}
+                  Increased by {{ improvement }} points
+                {% elif improvement < 0 %}
+                  Decreased by {{ improvement_abs }} points
+                {% else %}
+                  No change
+                {% endif %}
+              </span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="flex-1">
+          <p class="text-gray-600 mb-2">Total Assessments</p>
+          <span class="text-3xl font-bold">{{ total_assessments }}</span>
+        </div>
+      </div>
+    </div>
+
+  
+  </div>
+
+
+<!-- Appointment History -->
+<div class="lg:col-span-3 bg-white rounded-lg shadow-sm p-6">
+    <h2 class="text-lg font-semibold mb-6">Appointment History</h2>
+    
+    <!-- Filter Buttons -->
+    <div class="flex gap-4 mb-6">
+      <button 
+        class="filter-btn active px-4 py-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200" 
+        data-status="all"
+      >
+        All
+      </button>
+      <button 
+        class="filter-btn px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200" 
+        data-status="Pending"
+      >
+        Pending
+      </button>
+      <button 
+        class="filter-btn px-4 py-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200" 
+        data-status="Confirmed"
+      >
+        Confirmed
+      </button>
+      <button 
+        class="filter-btn px-4 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200" 
+        data-status="Cancelled"
+      >
+        Cancelled
+      </button>
+    </div>
+  
+    <!-- Appointments Table -->
+    <div class="overflow-x-auto">
+      <table id="appointmentsTable" class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+
+
+  <!-- Edit Profile Modal -->
+  <div id="patientEditModal" class="hidden fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-[40%] max-w-lg overflow-y-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-semibold">Edit Personal Information</h3>
+        <button 
+          data-modal-close 
+          data-modal-target="patientEditModal" 
+          class="text-gray-500 hover:text-gray-700"
+        >✕</button>
+      </div>
+
+      <form action="{% url 'update_profile' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Profile Image Section -->
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-100">
+            {% if patient.featured_image %}
+              <img id="profilePreview" src="{{ patient.featured_image.url }}" alt="Profile image" class="w-full h-full object-cover">
+            {% else %}
+              <img id="profilePreview" src="/static/images/patients/def-avatar.jpg" alt="Default profile" class="w-full h-full object-cover">
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-2">Profile Image</label>
+            <input type="file" id="profileImage" name="profile_image" class="text-sm" accept=".jpg,.jpeg,.png" onchange="previewImage()">
+            <p class="text-xs text-gray-500 mt-1">Only JPG, JPEG and PNG formats allowed</p>
+          </div>
+        </div>
+
+        
+        <div class="flex flex-wrap -mx-2">
+         
+          <div class="w-1/2 px-2">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">First Name</label>
+              <input type="text" name="first_name" class="w-full border rounded-lg px-4 py-2" value="{{ patient.user.first_name }}" required />
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Email</label>
+              <input type="email" name="email" class="w-full border rounded-lg px-4 py-2" value="{{ patient.user.email }}" required />
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Phone</label>
+              <input type="tel" name="phone" class="w-full border rounded-lg px-4 py-2" value="{{ patient.contact_number|default:'' }}" required/>
+            </div>
+          </div>
+          
+          <!-- Right Column -->
+          <div class="w-1/2 px-2">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Last Name</label>
+              <input type="text" name="last_name" class="w-full border rounded-lg px-4 py-2" value="{{ patient.user.last_name }}" required />
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Gender</label> <!-- Left Column -->
+              <select name="gender" class="w-full border rounded-lg px-4 py-2" required>
+                <option value="male" {% if patient.user.gender == 'male' %}selected{% endif %}>Male</option>
+                <option value="female" {% if patient.user.gender == 'female' %}selected{% endif %}>Female</option>
+                <option value="other" {% if patient.user.gender == 'other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Address</label>
+              <textarea name="address" class="w-full border rounded-lg px-4 py-2 h-[38px]">{{ patient.address|default:'None' }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-4 mt-4">
+          <button 
+            type="button" 
+            data-modal-close 
+            data-modal-target="patientEditModal" 
+            class="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="patientPasswordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-[40%] max-w-lg">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-semibold">Change Password</h3>
+        <button 
+          data-modal-close 
+          data-modal-target="patientPasswordModal" 
+          class="text-gray-500 hover:text-gray-700"
+        >✕</button>
+      </div>
+
+      <form action="{% url 'change_password' %}" method="POST">
+        {% csrf_token %}
+        <div class="space-y-4">
+          <div>
+            <label class="block text-gray-700 mb-2">Current Password</label>
+            <input type="password" name="old_password" class="w-full border rounded-lg px-4 py-2" required />
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-2">New Password</label>
+            <input type="password" name="new_password1" class="w-full border rounded-lg px-4 py-2" required />
+            <p class="text-xs text-gray-500 mt-1">Password must be at least 8 characters long</p>
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-2">Confirm New Password</label>
+            <input type="password" name="new_password2" class="w-full border rounded-lg px-4 py-2" required />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-4 mt-6">
+          <button 
+            data-modal-close 
+            data-modal-target="patientPasswordModal" 
+            class="text-gray-500 hover:text-gray-700"
+          >Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Change Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Account Modal -->
+  <div id="patientDeleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-[40%] max-w-lg">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-semibold">Delete Account</h3>
+        <button 
+          data-modal-close 
+          data-modal-target="patientDeleteModal" 
+          class="text-gray-500 hover:text-gray-700"
+        >✕</button>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-red-600 font-medium">Warning: This action cannot be undone.</p>
+        <p class="text-gray-700 mt-2">All your data including assessments, appointments, and personal information will be permanently deleted.</p>
+      </div>
+
+      <form action="{% url 'delete_account' %}" method="POST">
+        {% csrf_token %}
+        <div class="space-y-4">
+          <div>
+            <label class="block text-gray-700 mb-2">Enter your password to confirm</label>
+            <input type="password" name="password" class="w-full border rounded-lg px-4 py-2" required />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-4 mt-6">
+          <button 
+            data-modal-close 
+            data-modal-target="patientDeleteModal" 
+            class="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

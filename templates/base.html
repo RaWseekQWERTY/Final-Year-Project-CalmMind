@@ -7,10 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CalmMind | {% block part %} {% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.tailwind.min.css">
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    
+    {% block extra_head %}{% endblock %}
     {% csrf_token %}
   </head>
   <body>
@@ -82,7 +84,7 @@
             </svg>
           </button>
           <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border rounded shadow-md z-50">
-            <a href="#" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-500">View Profile</a>
+            <a href="{% url 'patient_profile' %}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-500">View Profile</a>
             {% if role == "patient" %}
               <a href="{% url 'dashboard-patient' %}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-500">Patient Dashboard</a>
             {% elif role == "doctor" %}

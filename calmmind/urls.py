@@ -26,5 +26,6 @@ urlpatterns = [
     path('', include('dashboard.urls')),
     path('', include('assessment.urls')),
     path('',include('chatbot.urls')),
+    path('profile/',include('patient_profile.urls')),
     path('appointment-chatbot/',include('appointment_chatbot.urls')),
 ] +  static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
