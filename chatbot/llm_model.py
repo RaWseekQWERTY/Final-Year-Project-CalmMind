@@ -65,6 +65,7 @@ class LlamaModelWrapper:
             ,'insomnia','mental','mental illness','burnout','overwhelmed','fear','phobia','ocd','trauma','ptsd','bipolar',
             'intrusive thoughts','schizophrenia','addiction','substance','counseling','panic','self-harm','self-steem',
             'meditation','mindfulness','wellness','psychiatrist','coping','hopeless','future','insomnia','mental disorder','help','suggestions'
+            ,'lazy','work','job','deprieved','anxious','sucide','confidence','self-esteem'
         ]
         
         query_lower = query.lower()
@@ -100,7 +101,7 @@ class LlamaModelWrapper:
                 f"### Instruction:\n{query}\n\n### Response:\n"
             )
 
-            # Move inputs to model device (CPU/GPU)
+            # Tokenize
             inputs = self.tokenizer(
                 formatted_prompt, 
                 return_tensors="pt",
@@ -125,9 +126,14 @@ class LlamaModelWrapper:
                 generated_tokens,
                 skip_special_tokens=True
             ).strip()
+            
+            # Fallback: Avoid echoing
+            if response.lower().strip() == query.lower().strip():
+                return "I'm really sorry you're feeling this way. You're not alone, and there are people who care. Would you like to talk about it more?"
+
 
             return response
 
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
-            return "Failed to generate response."
+            return "I'm here to help, but something went wrong generating a response. Please try again."
