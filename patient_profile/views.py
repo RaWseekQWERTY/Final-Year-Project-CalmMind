@@ -6,12 +6,12 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
-from auth_app.models import Patient
+from auth_app.models import Patient, Doctor
 from assessment.models import PHQ9Assessment
 from appointment.models import Appointment
 from datetime import datetime
 from io import BytesIO
-import json
+from appointment.models import DoctorAvailability
 
 User = get_user_model()
 
@@ -175,3 +175,40 @@ def appointment_pdf(request, appointment_id):
     response['Content-Disposition'] = f'attachment; filename="appointment_{appointment_id}.pdf"'
     
     return response
+
+
+@login_required
+def doctor_settings(request):
+    if not request.user.is_doctor():
+        return redirect('home')
+    return render(request, 'dashboard/doctor/settings.html')
+
+@login_required
+def doctor_availability_register(request, doctor_id):
+    if not request.user.is_doctor():
+        return redirect('home')
+    
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    if request.user != doctor.user:
+        return redirect('doctor-settings')
+
+    if request.method == 'POST':
+        visiting_hours_start = request.POST.get('visiting_hours_start')
+        visiting_hours_end = request.POST.get('visiting_hours_end')
+        consultation_fee = request.POST.get('consultation_fee')
+        location = request.POST.get('location')
+
+        DoctorAvailability.objects.update_or_create(
+            doctor=doctor,
+            defaults={
+                'visiting_hours_start': visiting_hours_start,
+                'visiting_hours_end': visiting_hours_end,
+                'consultation_fee': consultation_fee,
+                'location': location,
+            }
+        )
+        
+        messages.success(request, 'Availability settings updated successfully!')
+        return redirect('doctor-settings')
+
+    return redirect('doctor-settings')
