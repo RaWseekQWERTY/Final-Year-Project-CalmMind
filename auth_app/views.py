@@ -21,6 +21,7 @@ def home_view(request):
     context = {'role': getattr(request.user, 'role', None)}
     return render(request, 'auth_app/home.html', context)
 
+
 def register_view(request):
     if request.user.is_authenticated:  # Check if the user is logged in
         return redirect('/')  # Redirect to the homepage or another page
@@ -289,3 +290,6 @@ def reset_password(request):
             messages.error(request, "User not found")
     
     return render(request, "auth_app/reset_password.html")
+
+def about_view(request):
+    return render(request, 'auth_app/about.html')

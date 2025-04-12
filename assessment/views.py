@@ -5,7 +5,9 @@ from django.core.exceptions import PermissionDenied
 from auth_app.models import Patient
 import pickle
 import pandas as pd
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def assessment(request):
     if request.method == 'POST':
         # Check if the user is a patient

@@ -71,10 +71,19 @@
   </div>
 </div>
 
+<!-- appointment_chatbot/templates/chat.html -->
+{% if not user.is_authenticated %}
+    <script>
+        window.location.href = "{% url 'home' %}";
+    </script>
+{% endif %}
+
 <script>
   function redirectToAssessment() {
         window.location.href = "{% url 'assessment' %}";
     }
+
+  
     
   // Establish WebSocket connection for the appointment chatbot
   const chatSocket = new WebSocket(

@@ -144,6 +144,10 @@ def book_appointment(request, doctor_id=None):
             context['error_message'] = "The doctor is already booked for the selected date and time."
             return render(request, 'appointment/book_appointment.html', context)
 
+        if not location:
+            location = "Hospital"
+        if not notes:
+            notes = "Nothing"
         # Create the appointment if all checks pass
         appointment = Appointment.objects.create(
             patient=request.user.patient_profile,
