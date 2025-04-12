@@ -17,8 +17,8 @@ def doctor_list(request):
     # Get filter parameters from the request
     specialty = request.GET.get('specialty', '')
     gender = request.GET.get('gender', '')
-    available_today = request.GET.get('available_today', False)
-    available_this_week = request.GET.get('available_this_week', False)
+    available_today = request.GET.get('available_today') == 'on'
+    available_this_week = request.GET.get('available_this_week') == 'on'
 
     # Start with all doctors
     doctors = Doctor.objects.all()
@@ -27,21 +27,33 @@ def doctor_list(request):
     if specialty:
         doctors = doctors.filter(specialization__icontains=specialty)
     if gender:
-        doctors = doctors.filter(user__gender=gender)  # Filter by gender in the User model
+        doctors = doctors.filter(user__gender=gender)
 
     # Filter by availability
     if available_today or available_this_week:
-        today = datetime.today().date()
-        start_of_week = today - timedelta(days=today.weekday())
-        end_of_week = start_of_week + timedelta(days=6)
-
-        availability_filters = Q()
+        today = timezone.now().date()
+        current_time = timezone.now().time()
+        
+        # Create base availability query
+        availability_query = Q(information__isnull=False)  # Doctor must have availability info
+        
         if available_today:
-            availability_filters |= Q(information__visiting_hours_start__lte=time(23, 59, 59), information__visiting_hours_end__gte=time(0, 0, 0))
+            # For today, check if current time is before end time
+            availability_query &= Q(
+                information__visiting_hours_end__gte=current_time
+            )
+        
         if available_this_week:
-            availability_filters |= Q(information__visiting_hours_start__lte=time(23, 59, 59), information__visiting_hours_end__gte=time(0, 0, 0))
+            start_of_week = today - timedelta(days=today.weekday())
+            end_of_week = start_of_week + timedelta(days=6)
+            
+            # For this week, include doctors with any availability
+            availability_query &= Q(
+                information__visiting_hours_start__isnull=False,
+                information__visiting_hours_end__isnull=False
+            )
 
-        doctors = doctors.filter(availability_filters)
+        doctors = doctors.filter(availability_query)
 
     # Check if no doctors are available
     no_doctors = not doctors.exists()

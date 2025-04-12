@@ -212,7 +212,6 @@
     </div>
 </div>
 
-<!-- JavaScript to handle the modals -->
 <script>
 let currentAppointmentId = null;
 
@@ -292,7 +291,7 @@ function confirmCancelAppointment() {
     .then(data => {
         if (data.status === 'success') {
             closeCancelModal();
-            window.location.reload(); // Refresh to show updated status
+            window.location.reload(); // Refresh
         } else {
             alert(data.message);
         }

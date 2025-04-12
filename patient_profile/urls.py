@@ -11,6 +11,6 @@ urlpatterns = [
     path('appointment-pdf/<int:appointment_id>/', views.appointment_pdf, name='appointment_pdf'),
     path('doctor/settings/', views.doctor_settings, name='doctor-settings'),
     path('doctor/settings/availability/<int:doctor_id>/', views.doctor_availability_register, name='doctor_availability_register'),
-    # path('doctor/settings/information/<int:doctor_id>/', views.doctor_information_update, name='doctor_information_update'),
-    # path('doctor/settings/notification/', views.doctor_send_notification, name='doctor_send_notification'),
+    path('doctor/settings/information/<int:doctor_id>/', views.doctor_information_update, name='doctor_information_update'),
+    path('doctor/settings/notification/', views.doctor_send_notification, name='doctor_send_notification'),
 ]

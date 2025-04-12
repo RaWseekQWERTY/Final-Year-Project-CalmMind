@@ -12,6 +12,7 @@ from appointment.models import Appointment
 from datetime import datetime
 from io import BytesIO
 from appointment.models import DoctorAvailability
+from dashboard.models import Notification
 
 User = get_user_model()
 
@@ -57,21 +58,31 @@ def update_profile(request):
         patient = get_object_or_404(Patient, user=request.user)
         user = request.user
         
+        # Validate phone number
+        contact_number = request.POST.get('phone')
+        if not contact_number.isdigit() or len(contact_number) != 10 or not any(contact_number.startswith(prefix) for prefix in ['984','985','986','974','975','976','980','981','982','961','988','972','963']):
+            messages.error(request, 'Please enter a valid Nepal phone number')
+            return redirect('patient_profile')
+        
+        # Validate email
+        new_email = request.POST.get('email')
+        if new_email != user.email:  # Only check if email is being changed
+            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                messages.error(request, 'This email is already registered')
+                return redirect('patient_profile')
+        
         # Update user info
-        user.first_name = request.POST.get('first_name')
-        user.last_name = request.POST.get('last_name')
-        user.email = request.POST.get('email')
+        user.first_name = request.POST.get('first_name').capitalize()
+        user.last_name = request.POST.get('last_name').capitalize()
+        user.email = new_email
         user.gender = request.POST.get('gender')
         user.save()
         
         # Update patient info
-        patient.contact_number = request.POST.get('phone')
+        patient.contact_number = contact_number
         patient.address = request.POST.get('address')
         
-        # Handle emergency contact
-        patient.emergency_contact = request.POST.get('emergency_contact')
-        
-        # Handle profile image if provided
+        # Handle profile image 
         if 'profile_image' in request.FILES:
             image = request.FILES['profile_image']
             # Check file extension
@@ -181,7 +192,18 @@ def appointment_pdf(request, appointment_id):
 def doctor_settings(request):
     if not request.user.is_doctor():
         return redirect('home')
-    return render(request, 'dashboard/doctor/settings.html')
+    
+    # Generate years for dropdowns (from 1970 to current year)
+    current_year = datetime.now().year
+    years = range(1970, current_year + 1)
+    
+    patients = Patient.objects.all()
+    
+    context = {
+        'patients': patients,
+        'years': years
+    }
+    return render(request, 'dashboard/doctor/settings.html', context)
 
 @login_required
 def doctor_availability_register(request, doctor_id):
@@ -211,4 +233,88 @@ def doctor_availability_register(request, doctor_id):
         messages.success(request, 'Availability settings updated successfully!')
         return redirect('doctor-settings')
 
+    return redirect('doctor-settings')
+
+@login_required
+def doctor_send_notification(request):
+    if not request.user.is_doctor():
+        return redirect('home')
+    
+    if request.method == 'POST':
+        patient_id = request.POST.get('patient')
+        message = request.POST.get('message')
+        
+        try:
+            patient = Patient.objects.get(id=patient_id)
+            
+            # Create notification
+            Notification.objects.create(
+                user=patient.user,
+                message=message
+            )
+            
+            messages.success(request, f'Notification sent to {patient.user.get_full_name()}')
+        except Patient.DoesNotExist:
+            messages.error(request, 'Selected patient not found')
+        except Exception as e:
+            messages.error(request, f'Error sending notification: {str(e)}')
+    
+    return redirect('doctor-settings')
+
+@login_required
+def doctor_information_update(request, doctor_id):
+    if not request.user.is_doctor():
+        return redirect('home')
+    
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    if request.user != doctor.user:
+        return redirect('doctor-settings')
+
+    if request.method == 'POST':
+        user = request.user
+        
+        # Validate phone number
+        contact_number = request.POST.get('contact_number')
+        if not contact_number.isdigit() or len(contact_number) != 10 or not any(contact_number.startswith(prefix) for prefix in ['984','985','986','974','975','976','980','981','982','961','988','972','963']):
+            messages.error(request, 'Please enter a valid Nepal phone number')
+            return redirect('doctor-settings')
+        
+        # Validate email
+        new_email = request.POST.get('email')
+        if new_email != user.email:  # Only check if email is being changed
+            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                messages.error(request, 'This email is already registered')
+                return redirect('doctor-settings')
+        
+        # Update user info
+        user.first_name = request.POST.get('first_name').capitalize()
+        user.last_name = request.POST.get('last_name').capitalize()
+        user.email = new_email
+        user.gender = request.POST.get('gender')
+        user.save()
+        
+        # Update doctor info
+        doctor.contact_number = contact_number
+        doctor.specialization = request.POST.get('specialization')
+        doctor.license_number = request.POST.get('license_number')
+        doctor.institute = request.POST.get('institute')
+        doctor.degree = request.POST.get('degree')
+        doctor.completion_year = request.POST.get('completion_year')
+        doctor.work_place = request.POST.get('work_place')
+        doctor.designation = request.POST.get('designation')
+        doctor.start_year = request.POST.get('start_year')
+        doctor.end_year = request.POST.get('end_year')
+        
+        # Handle profile image
+        if 'profile_image' in request.FILES:
+            image = request.FILES['profile_image']
+            if image.name.lower().endswith(('.png', '.jpg', '.jpeg')):
+                doctor.featured_image = image
+            else:
+                messages.error(request, 'Invalid image format. Only PNG, JPG and JPEG are allowed.')
+                return redirect('doctor-settings')
+        
+        doctor.save()
+        messages.success(request, 'Profile updated successfully!')
+        
     return redirect('doctor-settings')
