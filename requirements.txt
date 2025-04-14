@@ -99,6 +99,7 @@ sympy==1.13.1
 thinc==8.3.4
 threadpoolctl==3.5.0
 tokenizers==0.21.1
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.6.0+cpu
 tqdm==4.67.1
 transformers==4.50.0

@@ -4,9 +4,8 @@ set -e
 
 echo "Starting Docker Entrypoint for CalmMind..."
 
-# Wait for PostgreSQL
 echo " Waiting for PostgreSQL..."
-until nc -z $DB_HOST $DB_PORT; do
+until pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; do
   sleep 1
 done
 echo "PostgreSQL is ready!"
