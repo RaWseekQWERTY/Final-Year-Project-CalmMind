@@ -1,18 +1,17 @@
-version: '3.9'
-
 services:
   web:
     build: .
-    command: gunicorn calmmind.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
+      - /app/staticfiles:/app/staticfiles
+      - /app/node_modules:/app/node_modules
     ports:
       - "8000:8000"
     env_file:
       - .env
     depends_on:
       - db
-
+    command: daphne -b 0.0.0.0 -p 8000 calmmind.asgi:application
   db:
     image: postgres:15
     environment:
@@ -22,7 +21,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
-
+      - "5434:5432"
 volumes:
   postgres_data:
