@@ -6,3 +6,7 @@ __pycache__/
 tinyllama-base/
 node_modules/
 .git/
+env
+env/
+venv
+venv/
