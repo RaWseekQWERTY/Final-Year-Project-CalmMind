@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
 from .models import User,Patient,Doctor
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -9,6 +9,12 @@ from django.core.mail import send_mail
 from django.conf import settings
 import random
 import string
+from django.db.models import Count
+from django.db.models.functions import TruncDate
+from assessment.models import PHQ9Assessment
+from appointment.models import Appointment
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 User = get_user_model()
 
@@ -169,29 +175,34 @@ def admin_dashboard(request):
 def update_user_role_page(request, user_id):
     if not request.user.is_admin():
         return HttpResponseForbidden("You are not authorized to update user roles.")
+    
     user = get_object_or_404(User, id=user_id)
     if request.method == 'POST':
         new_role = request.POST.get('role')
-        if new_role in [role[0] for role in User.ROLE_CHOICES]:
+        valid_roles = ['admin', 'doctor', 'patient']
+        
+        if new_role in valid_roles:
             user.role = new_role
             if new_role == 'patient':
                 if hasattr(user, 'doctor_profile'):
-                  user.doctor_profile.delete()
+                    user.doctor_profile.delete()
                 Patient.objects.get_or_create(user=user)
             elif new_role == 'doctor':
-               if hasattr(user, 'patient_profile'):
-                  user.patient_profile.delete()
-                  Doctor.objects.get_or_create(user=user)
-            else:
-                  if hasattr(user, 'doctor_profile'):
-                      user.doctor_profile.delete()
-                  if hasattr(user, 'patient_profile'):
-                      user.patient_profile.delete()
+                if hasattr(user, 'patient_profile'):
+                    user.patient_profile.delete()
+                Doctor.objects.get_or_create(user=user)
+            else:  # admin
+                if hasattr(user, 'doctor_profile'):
+                    user.doctor_profile.delete()
+                if hasattr(user, 'patient_profile'):
+                    user.patient_profile.delete()
+            
             user.save()
             messages.success(request, f"User '{user.username}' role updated to {new_role}.")
-            return redirect('admin_dashboard')
+            return JsonResponse({'status': 'success'})
         else:
-            messages.error(request, 'Invalid role selected.')
+            return JsonResponse({'error': 'Invalid role selected.'}, status=400)
+    
     return render(request, "auth_app/update_role_page.html", {'user': user})
 
 
@@ -240,7 +251,6 @@ def verify_otp(request):
         stored_otp = request.session.get('reset_otp')
         
         if entered_otp == stored_otp:
-            # Store a flag indicating OTP verification was successful
             request.session['otp_verified'] = True
             return redirect('reset_password')
         else:
@@ -293,3 +303,112 @@ def reset_password(request):
 
 def about_view(request):
     return render(request, 'auth_app/about.html')
+
+@login_required
+def user_stats_api(request):
+    if not request.user.is_admin():
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    user_joins = User.objects.annotate(
+        date=TruncDate('date_joined')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('date')
+
+    role_distribution = User.objects.values('role').annotate(
+        count=Count('id')
+    )
+
+    return JsonResponse({
+        'user_joins': list(user_joins),
+        'role_distribution': list(role_distribution)
+    })
+
+@login_required
+def depression_stats_api(request):
+    if not request.user.is_admin():
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    depression_levels = PHQ9Assessment.objects.values(
+        'depression_level'
+    ).annotate(
+        count=Count('assessment_id')
+    )
+
+    return JsonResponse({
+        'depression_levels': list(depression_levels)
+    })
+
+@login_required
+def appointment_stats_api(request):
+    if not request.user.is_admin():
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    appointments = Appointment.objects.values(
+        'doctor__user__first_name'
+    ).annotate(
+        count=Count('id')
+    )
+
+    return JsonResponse({
+        'appointments': list(appointments)
+    })
+
+@login_required
+def generate_user_pdf(request, user_id):
+    if not request.user.is_admin():
+        return HttpResponse('Unauthorized', status=403)
+
+    user = get_object_or_404(User, id=user_id)
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="user_{user_id}_report.pdf"'
+    
+    # PDF Details
+    p = canvas.Canvas(response, pagesize=letter)
+    
+    p.drawString(100, 750, f"User Report - {user.get_full_name()}")
+    p.drawString(100, 730, f"Username: {user.username}")
+    p.drawString(100, 710, f"Email: {user.email}")
+    p.drawString(100, 690, f"Role: {user.role}")
+    
+    if hasattr(user, 'patient_profile'):
+        patient = user.patient_profile
+        p.drawString(100, 670, "Patient Information:")
+        p.drawString(120, 650, f"Date of Birth: {patient.date_of_birth}")
+        p.drawString(120, 630, f"Address: {patient.address}")
+        
+        # Add PHQ-9 assessment history
+        assessments = PHQ9Assessment.objects.filter(patient=patient)
+        y_position = 610
+        p.drawString(100, y_position, "PHQ-9 Assessment History:")
+        for assessment in assessments:
+            y_position -= 20
+            p.drawString(120, y_position, 
+                f"Date: {assessment.assessment_date.strftime('%Y-%m-%d')} - "
+                f"Score: {assessment.score} - Level: {assessment.get_depression_level_display()}")
+    
+    p.showPage()
+    p.save()
+    return response
+
+@login_required
+def users_api(request):
+    if not request.user.is_admin():
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    users = User.objects.all()
+    data = []
+    
+    for user in users:
+        data.append({
+            'id': user.id,
+            'username': user.username,
+            'full_name': f"{user.first_name} {user.last_name}",
+            'email': user.email,
+            'role': user.role
+        })
+    
+    return JsonResponse({
+        'data': data 
+    })

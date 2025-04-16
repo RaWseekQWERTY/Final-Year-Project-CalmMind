@@ -14,4 +14,9 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('reset-password/', views.reset_password, name='reset_password'),
     path('about/', views.about_view, name='about'),
+    path('api/user-stats/', views.user_stats_api, name='user_stats_api'),
+    path('api/depression-stats/', views.depression_stats_api, name='depression_stats_api'),
+    path('api/appointment-stats/', views.appointment_stats_api, name='appointment_stats_api'),
+    path('api/user-pdf/<int:user_id>/', views.generate_user_pdf, name='generate_user_pdf'),
+    path('api/users/', views.users_api, name='users_api'),
 ]

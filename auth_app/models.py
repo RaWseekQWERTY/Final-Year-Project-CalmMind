@@ -16,6 +16,11 @@ class User(AbstractUser):
         ('female', 'Female'),
         ('other', 'Other'),
     )
+    ROLE_CHOICES = (
+        ('admin', 'Admin'),
+        ('doctor', 'Doctor'),
+        ('patient', 'Patient'),
+    )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='male')
 
