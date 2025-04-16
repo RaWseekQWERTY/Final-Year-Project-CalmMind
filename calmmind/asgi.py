@@ -12,7 +12,11 @@ from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from channels.sessions import SessionMiddlewareStack
-from chatbot.routing import websocket_urlpatterns
+
+# Import websocket_urlpatterns lazily
+def get_websocket_urlpatterns():
+    from chatbot.routing import websocket_urlpatterns
+    return websocket_urlpatterns
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'calmmind.settings')
 
@@ -21,7 +25,7 @@ application = ProtocolTypeRouter({
      "websocket": SessionMiddlewareStack(  # Add session middleware here
         AuthMiddlewareStack(
             URLRouter(
-                websocket_urlpatterns
+                get_websocket_urlpatterns()  # Lazily load WebSocket routes
             )
         )
     ),

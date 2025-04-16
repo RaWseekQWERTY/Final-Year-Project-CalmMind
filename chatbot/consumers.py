@@ -1,7 +1,6 @@
 import json
 import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
-from .llm_model import LlamaModelWrapper
 import logging
 import concurrent.futures
 
@@ -55,6 +54,7 @@ class ChatbotConsumer(AsyncWebsocketConsumer):
             }))
     
     async def get_model_response(self, message):
+        from .llm_model import LlamaModelWrapper
         """Get response from the LLM model in a non-blocking way."""
         try:
             # Run the model inference in a thread pool to avoid blocking the event loop

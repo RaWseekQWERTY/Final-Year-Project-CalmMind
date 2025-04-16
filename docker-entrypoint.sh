@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 echo "Starting Docker Entrypoint for CalmMind..."
+# Set DJANGO_SETTINGS_MODULE
+export DJANGO_SETTINGS_MODULE=calmmind.settings
 echo " Waiting for PostgreSQL..."
 until pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; do
   sleep 1
@@ -33,5 +35,6 @@ if [ "$DJANGO_SUPERUSER_EMAIL" ]; then
   python manage.py createsuperuser --noinput || echo "Superuser exists"
 fi
 
-echo "Starting Gunicorn server..."
-exec gunicorn calmmind.wsgi:application --bind 0.0.0.0:8000 --timeout 120
+# Start Daphne server
+echo "Starting Daphne server..."
+exec daphne -b 0.0.0.0 -p 8000 calmmind.asgi:application

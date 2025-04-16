@@ -61,4 +61,3 @@ RUN chmod +x docker-entrypoint.sh
 
 # Entrypoint script
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["gunicorn", "calmmind.wsgi:application", "--bind", "0.0.0.0:8000"]

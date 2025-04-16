@@ -2,7 +2,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.sessions.backends.db import SessionStore
 from asgiref.sync import sync_to_async
 import json
-from .chat import get_response
 
 class AppointmentChatbotConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -22,6 +21,7 @@ class AppointmentChatbotConsumer(AsyncWebsocketConsumer):
         pass
 
     async def receive(self, text_data):
+        from .chat import get_response
         data = json.loads(text_data)
         user_message = data['message']
         user_id = self.scope["user"].id  # Get the logged-in user's ID
