@@ -140,6 +140,32 @@ Optional: use `ngrok` or `localhost.run` for public tunneling.
 
 ---
 
+### 🐳 Docker Image
+
+You can pull and run the CalmMind Mental Health Assistant using the prebuilt Docker image:
+
+```bash
+docker pull rasik09/calmmind-mental-health-assistant:latest
+```
+
+To run the container:
+
+```bash
+docker run -it --rm -p 8000:8000 rasik09/calmmind-mental-health-assistant:latest
+```
+
+> ⚠️ Make sure your PostgreSQL instance is running and accessible by the container. Configure environment variables accordingly.
+
+If your app requires any `.env` file or volume mounts, you can run it like:
+
+```bash
+docker run -it --rm -p 8000:8000 \
+  --env-file .env \
+  rasik09/calmmind-mental-health-assistant:latest
+```
+
+
+
 ## 📌 License
 This project is developed for academic purposes and follows the MIT License.
 
@@ -149,4 +175,3 @@ This project is developed for academic purposes and follows the MIT License.
 - HuggingFace & TinyLlama Team
 - Django & TailwindCSS Docs
 - Mental health datasets (PHQ-9)
-- ChatGPT (for prompt engineering guidance)
