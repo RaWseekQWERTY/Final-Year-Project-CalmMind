@@ -8,11 +8,12 @@ from django.utils import timezone
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from auth_app.decorators import patient_required
 
 User = get_user_model()
 
-# List of all available doctors
 @login_required
+@patient_required
 def doctor_list(request):
     # Get filter parameters from the request
     specialty = request.GET.get('specialty', '')
@@ -84,6 +85,7 @@ def doctor_list(request):
 
 
 @login_required
+@patient_required
 def book_appointment(request, doctor_id=None):
     # Check if doctor_id is None or empty
     if not doctor_id:
@@ -110,13 +112,11 @@ def book_appointment(request, doctor_id=None):
         appointment_date_obj = datetime.strptime(appointment_date, "%Y-%m-%d").date()
         appointment_time_obj = datetime.strptime(appointment_time, "%H:%M").time()
 
-        # Combine date and time into a single datetime object
         appointment_datetime_naive = datetime.combine(appointment_date_obj, appointment_time_obj)
 
         # Make the combined datetime timezone-aware
         appointment_datetime = timezone.make_aware(appointment_datetime_naive)
 
-        # Get the current datetime (timezone-aware)
         current_datetime = timezone.now()
 
         # Check if the appointment date/time is in the past

@@ -20,9 +20,11 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from io import BytesIO
 from django.views.decorators.http import require_POST
+from auth_app.decorators import doctor_required, patient_required
 
 
 @login_required
+@doctor_required
 def doctor_dashboard(request):
     total_doctors = Doctor.objects.count()
     total_patients = Patient.objects.count()
@@ -60,6 +62,7 @@ def get_notifications(request):
 
 
 @login_required
+@doctor_required
 def doctor_appointments(request):
     if request.method == 'POST':
         appointment_id = request.POST.get('appointment_id')
@@ -138,6 +141,7 @@ def mark_notifications_read(request):
     return JsonResponse({'status': 'error'}, status=400)
 
 @login_required
+@doctor_required
 def doctor_analytics(request):
     doctor_appointments = Appointment.objects.filter(doctor=request.user.doctor_profile)
 
@@ -211,6 +215,7 @@ def doctor_analytics(request):
     return render(request, 'dashboard/doctor/analytics.html', context)
 
 @login_required
+@doctor_required
 def doctor_appointments_data(request):
     # Get the parameters from DataTables
     draw = int(request.GET.get('draw', 1))
@@ -276,6 +281,7 @@ def doctor_appointments_data(request):
     
     
 @login_required
+@doctor_required
 def patients_info(request):
     """Render the patients' information page for doctors."""
     return render(request, 'dashboard/doctor/patients_info.html')
@@ -359,6 +365,7 @@ def patients_info_data(request):
     })
 
 @login_required
+@doctor_required
 def patient_modal_data(request, patient_id):
     """Endpoint to get patient data for the modal."""
     doctor = Doctor.objects.get(user=request.user)
@@ -413,6 +420,7 @@ def patient_modal_data(request, patient_id):
     return JsonResponse(data)
 
 @login_required
+@doctor_required
 def update_appointment_notes(request, appointment_id):
     """Endpoint to update appointment notes."""
     if request.method == 'POST':
@@ -565,6 +573,7 @@ def export_patient_pdf(request, patient_id):
         return HttpResponse(f'Error generating PDF: {str(e)}', status=500)
 
 @login_required
+@patient_required
 def patient_dashboard(request):
     # Get patient's PHQ-9 assessments ordered by date
     assessments = PHQ9Assessment.objects.filter(
@@ -757,6 +766,11 @@ def cancel_appointment(request, appointment_id):
     try:
         appointment.status = 'Cancelled'
         appointment.save()
+        # Create notification for doctor
+        Notification.objects.create(
+                user=appointment.doctor.user,
+                message=f"Appointment with {request.user.get_full_name()} has been cancelled "
+            )
         
         return JsonResponse({
             'status': 'success',

@@ -6,8 +6,10 @@ from auth_app.models import Patient
 import pickle
 import pandas as pd
 from django.contrib.auth.decorators import login_required
+from auth_app.decorators import doctor_required, patient_required
 
 @login_required
+@patient_required
 def assessment(request):
     if request.method == 'POST':
         # Check if the user is a patient
@@ -54,6 +56,8 @@ def assessment(request):
 
     return render(request, 'assessment/depression_test.html')
 
+@login_required
+@patient_required
 def result(request, assessment_id=None):
     # Check if the user is a patient
     if not hasattr(request.user, 'patient_profile'):

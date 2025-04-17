@@ -65,7 +65,7 @@ class LlamaModelWrapper:
             ,'insomnia','mental','mental illness','burnout','overwhelmed','fear','phobia','ocd','trauma','ptsd','bipolar',
             'intrusive thoughts','schizophrenia','addiction','substance','counseling','panic','self-harm','self-steem',
             'meditation','mindfulness','wellness','psychiatrist','coping','hopeless','future','insomnia','mental disorder','help','suggestions'
-            ,'lazy','work','job','deprieved','anxious','sucide','confidence','self-esteem','adhd'
+            ,'lazy','work','job','deprieved','anxious','sucide','confidence','self-esteem','adhd','kill','die','harm','cut','hang','poison','accident','river','water','drown','jump','building'
         ]
         
         query_lower = query.lower()

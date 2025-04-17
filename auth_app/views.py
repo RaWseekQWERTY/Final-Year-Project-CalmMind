@@ -15,6 +15,8 @@ from assessment.models import PHQ9Assessment
 from appointment.models import Appointment
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from mailtrap import Mail, Address, MailtrapClient
+from .decorators import admin_required
 
 User = get_user_model()
 
@@ -157,6 +159,7 @@ def patient_dashboard(request):
     return render(request, "auth_app/patient.html", {'patient': patient})
 
 @login_required
+
 def doctor_dashboard(request):
     if request.user.is_doctor():
         return render(request, "auth_app/doctor.html")
@@ -164,14 +167,16 @@ def doctor_dashboard(request):
 
 
 @login_required
+@admin_required
 def admin_dashboard(request):
     if not request.user.is_admin():
-        return HttpResponseForbidden("You are not authorized to view this page.")
+        return render(request, "auth_app/home.html")
     users = User.objects.all()
     return render(request, "auth_app/admin_dash.html", {"users": users})
 
 
 @login_required
+@admin_required
 def update_user_role_page(request, user_id):
     if not request.user.is_admin():
         return HttpResponseForbidden("You are not authorized to update user roles.")
@@ -220,19 +225,24 @@ def forgot_password(request):
         try:
             user = User.objects.get(email=email)
             otp = generate_otp()
+
             # Store OTP in session
             request.session['reset_otp'] = otp
             request.session['reset_email'] = email
-            
-            # Send email
-            send_mail(
-                'Password Reset OTP',
-                f'Your OTP for password reset is: {otp}',
-                settings.EMAIL_HOST_USER,
-                [email],
-                fail_silently=False,
+
+            # Send email using Mailtrap API
+            mail = Mail(
+                sender=Address(email="hello@demomailtrap.co", name="CalmMind"),
+                to=[Address(email=email)],
+                subject="Password Reset OTP",
+                text=f"Your OTP for password reset is: {otp}",
+                category="Password Reset"
             )
-            
+
+            client = MailtrapClient(token=settings.MAILTRAP_TOKEN)
+            response = client.send(mail)
+            print(response)  # Optional: log for debugging
+
             messages.success(request, "OTP has been sent to your email.")
             return redirect('verify_otp')
         except User.DoesNotExist:

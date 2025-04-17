@@ -13,10 +13,12 @@ from datetime import datetime
 from io import BytesIO
 from appointment.models import DoctorAvailability
 from dashboard.models import Notification
+from auth_app.decorators import patient_required, doctor_required
 
 User = get_user_model()
 
 @login_required
+@patient_required
 def patient_profile(request):
     patient = get_object_or_404(Patient, user=request.user)
     
@@ -189,6 +191,7 @@ def appointment_pdf(request, appointment_id):
 
 
 @login_required
+@doctor_required
 def doctor_settings(request):
     if not request.user.is_doctor():
         return redirect('home')
@@ -206,6 +209,7 @@ def doctor_settings(request):
     return render(request, 'dashboard/doctor/settings.html', context)
 
 @login_required
+@doctor_required
 def doctor_availability_register(request, doctor_id):
     if not request.user.is_doctor():
         return redirect('home')
