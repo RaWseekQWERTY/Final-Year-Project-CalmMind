@@ -145,66 +145,69 @@ def mark_notifications_read(request):
 def doctor_analytics(request):
     doctor_appointments = Appointment.objects.filter(doctor=request.user.doctor_profile)
 
-    # Status counts (Donut Chart)
-    status_counts = doctor_appointments.values('status').annotate(count=models.Count('id'))
-    status_fig = px.pie(
-        data_frame=list(status_counts),
-        names='status',
-        values='count',
-        hole=0.4
-    )
-    status_chart = status_fig.to_html(full_html=False)
-
-    # Daily Appointments (Last 10 days - Bar Chart)
-    daily_appointments = doctor_appointments.values('appointment_date').annotate(
-        count=models.Count('id')
-    ).order_by('-appointment_date')[:10]
-    daily_fig = px.bar(
-        data_frame=list(daily_appointments),
-        x='appointment_date',
-        y='count'
-    )
-    daily_chart = daily_fig.to_html(full_html=False)
-
-    # Appointments by Time of Day (Line Chart)
-    time_slots = doctor_appointments.extra(
-        select={'hour': "EXTRACT(hour FROM appointment_time)"}
-    ).values('hour').annotate(count=models.Count('id')).order_by('hour')
-    
-    time_fig = px.line(
-        data_frame=list(time_slots),
-        x='hour',
-        y='count'
-    )
-    time_chart = time_fig.to_html(full_html=False)
-
-    # Monthly Appointment Trend
-    one_year_ago = now() - timedelta(days=365)
-    monthly_appointments = (
-        doctor_appointments.filter(appointment_date__gte=one_year_ago)
-        .annotate(month=models.functions.TruncMonth('appointment_date'))
-        .values('month')
-        .annotate(count=models.Count('id'))
-        .order_by('month')
-    )
-    monthly_fig = px.line(
-        data_frame=list(monthly_appointments),
-        x='month',
-        y='count',
-        title="Monthly Appointment Trend (Last 12 Months)"
-    )
-    monthly_chart = monthly_fig.to_html(full_html=False)
-
     context = {
-        'status_chart': status_chart,
-        'daily_chart': daily_chart,
-        'time_chart': time_chart,
-        'monthly_chart': monthly_chart,
         'total_appointments': doctor_appointments.count(),
         'confirmed_count': doctor_appointments.filter(status='Confirmed').count(),
         'pending_count': doctor_appointments.filter(status='Pending').count(),
         'cancelled_count': doctor_appointments.filter(status='Cancelled').count(),
     }
+
+    if doctor_appointments.exists():
+        # Status counts (Donut Chart)
+        status_counts = doctor_appointments.values('status').annotate(count=models.Count('id'))
+        if status_counts.exists():
+            status_fig = px.pie(
+                data_frame=list(status_counts),
+                names='status',
+                values='count',
+                hole=0.4
+            )
+            context['status_chart'] = status_fig.to_html(full_html=False)
+
+        # Daily Appointments (Last 10 days - Bar Chart)
+        daily_appointments = doctor_appointments.values('appointment_date').annotate(
+            count=models.Count('id')
+        ).order_by('-appointment_date')[:10]
+        
+        if daily_appointments.exists():
+            daily_fig = px.bar(
+                data_frame=list(daily_appointments),
+                x='appointment_date',
+                y='count'
+            )
+            context['daily_chart'] = daily_fig.to_html(full_html=False)
+
+        # Appointments by Time of Day (Line Chart)
+        time_slots = doctor_appointments.extra(
+            select={'hour': "EXTRACT(hour FROM appointment_time)"}
+        ).values('hour').annotate(count=models.Count('id')).order_by('hour')
+        
+        if time_slots.exists():
+            time_fig = px.line(
+                data_frame=list(time_slots),
+                x='hour',
+                y='count'
+            )
+            context['time_chart'] = time_fig.to_html(full_html=False)
+
+        # Monthly Appointment Trend
+        one_year_ago = now() - timedelta(days=365)
+        monthly_appointments = (
+            doctor_appointments.filter(appointment_date__gte=one_year_ago)
+            .annotate(month=models.functions.TruncMonth('appointment_date'))
+            .values('month')
+            .annotate(count=models.Count('id'))
+            .order_by('month')
+        )
+        
+        if monthly_appointments.exists():
+            monthly_fig = px.line(
+                data_frame=list(monthly_appointments),
+                x='month',
+                y='count',
+                title="Monthly Appointment Trend (Last 12 Months)"
+            )
+            context['monthly_chart'] = monthly_fig.to_html(full_html=False)
 
     # Add notification for report generation
     Notification.objects.create(

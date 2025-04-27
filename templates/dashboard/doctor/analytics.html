@@ -7,7 +7,7 @@
         <div class="card">
             <div class="card-header">Appointment Status Distribution</div>
             <div class="card-body">
-                {% if total_appointments > 0 %}
+                {% if status_chart %}
                     {{ status_chart|safe }}
                 {% else %}
                     <div class="flex items-center justify-center h-full">
@@ -21,7 +21,7 @@
         <div class="card">
             <div class="card-header">Daily Appointments (Last 10 Days)</div>
             <div class="card-body">
-                {% if total_appointments > 0 %}
+                {% if daily_chart %}
                     {{ daily_chart|safe }}
                 {% else %}
                     <div class="flex items-center justify-center h-full">
@@ -35,7 +35,7 @@
         <div class="card">
             <div class="card-header">Appointments by Time of Day</div>
             <div class="card-body">
-                {% if total_appointments > 0 %}
+                {% if time_chart %}
                     {{ time_chart|safe }}
                 {% else %}
                     <div class="flex items-center justify-center h-full">
@@ -45,11 +45,11 @@
             </div>
         </div>
 
-        <!-- Chart 4 ( - Monthly Trend) -->
+        <!-- Chart 4 (Monthly Trend) -->
         <div class="card">
             <div class="card-header">Monthly Appointment Trend (Last Year)</div>
             <div class="card-body">
-                {% if total_appointments > 0 %}
+                {% if monthly_chart %}
                     {{ monthly_chart|safe }}
                 {% else %}
                     <div class="flex items-center justify-center h-full">
@@ -59,6 +59,5 @@
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}
